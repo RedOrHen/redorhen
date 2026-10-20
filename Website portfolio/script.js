@@ -52,13 +52,28 @@
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
 
+  // Ogni voce di WORKS è un set (una "cartella") di foto: la prima è la copertina.
+  const PH_RATIOS = [[800, 1120], [800, 1000], [800, 1200], [1120, 800]];
   WORKS.forEach((w, i) => {
     w.index = i;
-    w.w = w.w || 800;
-    w.h = w.h || 1120;
-    w.placeholder = !w.src;
-    if (!w.src) w.src = placeholder('', '', i, w.w, w.h);
-    if (!w.alt) w.alt = w.placeholder ? 'Segnaposto: foto in arrivo' : `${w.character} — ${w.series}`;
+    let photos = Array.isArray(w.photos) ? w.photos.filter((p) => p && p.src) : [];
+    if (!photos.length && w.src) photos = [{ src: w.src, w: w.w, h: w.h, alt: w.alt }];
+    w.placeholder = !photos.length;
+    if (w.placeholder) {
+      const n = w.count || 4;
+      photos = Array.from({ length: n }, (_, k) => {
+        const [pw, ph] = k === 0 ? [w.w || 800, w.h || 1120] : PH_RATIOS[(i + k) % PH_RATIOS.length];
+        return { src: placeholder('', '', i + k, pw, ph), w: pw, h: ph, placeholder: true };
+      });
+    }
+    photos.forEach((p, k) => {
+      p.w = p.w || 800;
+      p.h = p.h || 1120;
+      if (!p.alt) p.alt = p.placeholder ? 'Segnaposto: foto in arrivo' : `${w.character} — ${w.series}, foto ${k + 1}`;
+    });
+    w.photos = photos;
+    // La copertina rappresenta il set nella griglia e nella pellicola della Home
+    Object.assign(w, { src: photos[0].src, w: photos[0].w, h: photos[0].h, alt: photos[0].alt });
   });
 
   // <img data-ph="Titolo|Sottotitolo" data-ph-i="2"> nell'HTML
@@ -129,25 +144,6 @@
       observe(el) { if (!motion || !io) { el.classList.add('px-done'); return; } io.observe(el); },
       run
     };
-  })();
-
-  /* ---------------------------------------------------------------
-     Grana di pellicola
-     --------------------------------------------------------------- */
-  (function grain() {
-    const g = $('.grain');
-    if (!g) return;
-    const c = document.createElement('canvas');
-    c.width = c.height = 180;
-    const ctx = c.getContext('2d');
-    const d = ctx.createImageData(180, 180);
-    for (let i = 0; i < d.data.length; i += 4) {
-      const v = Math.random() * 255;
-      d.data[i] = d.data[i + 1] = d.data[i + 2] = v;
-      d.data[i + 3] = 255;
-    }
-    ctx.putImageData(d, 0, 0);
-    g.style.setProperty('--grain', `url(${c.toDataURL('image/png')})`);
   })();
 
   /* ---------------------------------------------------------------
@@ -602,9 +598,13 @@
     const bar = $('.filters');
     if (!grid) return;
 
+    const nFoto = (n) => `${n} foto`;
     grid.innerHTML = WORKS.map((w) => `
-      <button class="work" type="button" data-i="${w.index}" data-cat="${esc(w.category)}" data-cursor="Apri" aria-label="Apri foto: ${esc(w.character)}${w.series ? ', ' + esc(w.series) : ''}">
-        <div class="px" style="aspect-ratio:${w.w}/${w.h}"><img src="${esc(w.src)}" alt="${esc(w.alt)}" width="${w.w}" height="${w.h}" loading="lazy" decoding="async"></div>
+      <button class="work${w.photos.length > 1 ? ' work--set' : ''}" type="button" data-i="${w.index}" data-cat="${esc(w.category)}" data-cursor="Apri set" aria-label="Apri il set ${esc(w.character)}${w.series ? ', ' + esc(w.series) : ''}: ${nFoto(w.photos.length)}">
+        <span class="work-stack">
+          <span class="px" style="aspect-ratio:${w.w}/${w.h}"><img src="${esc(w.src)}" alt="${esc(w.alt)}" width="${w.w}" height="${w.h}" loading="lazy" decoding="async"></span>
+          <span class="work-count pixel" aria-hidden="true"><i></i>${nFoto(w.photos.length)}</span>
+        </span>
         <span class="work-cap pixel"><span>${esc(w.character)}</span><span class="muted">${esc(w.series)}</span></span>
       </button>`).join('');
 
@@ -636,64 +636,83 @@
       if (motion) gsap.to(items, { opacity: 0, duration: .2, onComplete: apply }); else apply();
     });
 
-    // Lightbox
+    // Carosello del set
     const lb = document.createElement('div');
     lb.className = 'lightbox';
     lb.hidden = true;
     lb.setAttribute('role', 'dialog');
     lb.setAttribute('aria-modal', 'true');
-    lb.setAttribute('aria-label', 'Visualizzatore foto');
+    lb.setAttribute('aria-label', 'Set di foto');
     lb.innerHTML = `
-      <span class="lb-count pixel"></span>
+      <div class="lb-head">
+        <p class="lb-title pixel"></p>
+        <span class="lb-count pixel" aria-live="polite"></span>
+      </div>
       <button class="lb-btn lb-close" type="button" aria-label="Chiudi">✕ Esc</button>
       <button class="lb-btn lb-prev" type="button" aria-label="Foto precedente">◀</button>
       <button class="lb-btn lb-next" type="button" aria-label="Foto successiva">▶</button>
       <figure class="lb-figure">
         <div class="lb-media"><div class="px"><img alt=""></div></div>
-        <figcaption class="lb-cap pixel"></figcaption>
+        <div class="lb-thumbs" role="group" aria-label="Foto del set"></div>
       </figure>`;
     document.body.appendChild(lb);
     const media = $('.lb-media', lb);
     const lbPx = $('.px', lb);
     const lbImg = $('img', lb);
-    const cap = $('.lb-cap', lb);
+    const title = $('.lb-title', lb);
     const cnt = $('.lb-count', lb);
-    let list = [], pos = 0, opener = null;
+    const thumbs = $('.lb-thumbs', lb);
+    let set = null, list = [], pos = 0, opener = null;
 
-    const fit = (w) => {
+    const fit = (p) => {
       const maxW = innerWidth - (innerWidth < 700 ? 32 : 220);
-      const maxH = innerHeight * (innerWidth < 700 ? .62 : .7);
-      const s = Math.min(maxW / w.w, maxH / w.h);
-      media.style.width = `${Math.round(w.w * s)}px`;
-      media.style.height = `${Math.round(w.h * s)}px`;
+      const maxH = innerHeight * (innerWidth < 700 ? .5 : .6) + (list.length > 1 ? 0 : 60);
+      const s = Math.min(maxW / p.w, maxH / p.h);
+      media.style.width = `${Math.round(p.w * s)}px`;
+      media.style.height = `${Math.round(p.h * s)}px`;
     };
     const show = () => {
-      const w = WORKS[list[pos]];
-      fit(w);
-      lbImg.src = w.src;
-      lbImg.alt = w.alt;
-      cap.innerHTML = `<span>${esc(w.character)}</span><span class="muted">${esc(w.series)}</span>${w.cosplayer ? `<span class="ember">${esc(w.cosplayer)}</span>` : ''}`;
+      const p = list[pos];
+      fit(p);
+      lbImg.src = p.src;
+      lbImg.alt = p.alt;
       cnt.textContent = `${String(pos + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
+      $$('.lb-thumb', thumbs).forEach((t, k) => {
+        t.classList.toggle('is-active', k === pos);
+        t.setAttribute('aria-current', String(k === pos));
+        if (k === pos) t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: motion ? 'smooth' : 'auto' });
+      });
       pixel.run(lbPx);
-      const next = WORKS[list[(pos + 1) % list.length]];
+      const next = list[(pos + 1) % list.length];
       if (next && !next.placeholder) { const pre = new Image(); pre.src = next.src; }
     };
     const open = (i, from) => {
-      list = visible().map((it) => +it.dataset.i);
-      pos = Math.max(0, list.indexOf(i));
+      set = WORKS[i];
+      list = set.photos;
+      pos = 0;
       opener = from;
+      title.innerHTML = `<span>${esc(set.character)}</span><span class="muted">${esc(set.series)}</span>${set.cosplayer ? `<span class="ember">${esc(set.cosplayer)}</span>` : ''}`;
+      thumbs.innerHTML = list.length > 1 ? list.map((p, k) => `
+        <button class="lb-thumb" type="button" data-k="${k}" aria-label="Foto ${k + 1} di ${list.length}">
+          <img src="${esc(p.src)}" alt="" width="${p.w}" height="${p.h}" loading="lazy" decoding="async">
+        </button>`).join('') : '';
+      lb.classList.toggle('is-single', list.length < 2);
       lb.hidden = false;
       lockScroll(true);
       show();
       if (motion) gsap.fromTo(lb, { opacity: 0 }, { opacity: 1, duration: .3 });
       $('.lb-close', lb).focus();
     };
+    thumbs.addEventListener('click', (e) => {
+      const t = e.target.closest('.lb-thumb');
+      if (t) { pos = +t.dataset.k; show(); }
+    });
     const close = () => {
       lb.hidden = true;
       lockScroll(false);
       opener?.focus();
     };
-    const step = (d) => { pos = (pos + d + list.length) % list.length; show(); };
+    const step = (d) => { if (list.length < 2) return; pos = (pos + d + list.length) % list.length; show(); };
 
     grid.addEventListener('click', (e) => {
       const it = e.target.closest('.work');
@@ -722,7 +741,7 @@
       const dy = e.changedTouches[0].clientY - sy;
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
     }, { passive: true });
-    window.addEventListener('resize', () => { if (!lb.hidden) fit(WORKS[list[pos]]); });
+    window.addEventListener('resize', () => { if (!lb.hidden) fit(list[pos]); });
   }
 
   /* ---------------------------------------------------------------
