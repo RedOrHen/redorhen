@@ -52,25 +52,26 @@
   </div>
 
   <main id="main">
-    <section class="page-hero" data-intro-scope aria-labelledby="page-title">
-      <p class="kicker" data-intro>Contatti</p>
+    <section class="page-hero page-hero--photo" data-intro-scope aria-labelledby="page-title">
       <h1 class="title" id="page-title">
         <span class="line"><span data-chars>Nuova</span></span>
         <span class="line"><span data-chars>partita?</span></span>
       </h1>
       <p class="lede" data-intro>Raccontami il personaggio che hai in mente. Rispondo a tutti.</p>
+      <figure class="page-hero-photo" data-intro><div class="px"><img src="assets/works/contatti.jpg" alt="Cosplayer nei panni di Anna di Frozen Fever, seduta tra i fiori" width="1200" height="1500" decoding="async" fetchpriority="high"></div></figure>
     </section>
 
     <section class="section contact" aria-label="Richiesta shooting">
       <form class="form" id="contact-form" novalidate data-reveal>
+        <p class="form-legend">I campi con <span class="req" aria-hidden="true">*</span> sono obbligatori.</p>
         <input class="sr-only" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="field">
-          <label for="f-nome">Nome</label>
+          <label for="f-nome">Nome<span class="req" aria-hidden="true">*</span></label>
           <input id="f-nome" name="nome" type="text" autocomplete="name" required>
           <span class="field-error" aria-live="polite"></span>
         </div>
         <div class="field">
-          <label for="f-email">Email</label>
+          <label for="f-email">Email<span class="req" aria-hidden="true">*</span></label>
           <input id="f-email" name="email" type="email" autocomplete="email" required>
           <span class="field-error" aria-live="polite"></span>
         </div>
@@ -95,12 +96,12 @@
           <span class="field-error" aria-live="polite"></span>
         </div>
         <div class="field field--full">
-          <label for="f-messaggio">Messaggio</label>
+          <label for="f-messaggio">Messaggio<span class="req" aria-hidden="true">*</span></label>
           <textarea id="f-messaggio" name="messaggio" required minlength="10" placeholder="Raccontami la tua idea: atmosfera, location, riferimenti…"></textarea>
           <span class="field-error" aria-live="polite"></span>
         </div>
         <div class="field field--full">
-          <label class="check"><input type="checkbox" name="privacy" required> Acconsento al trattamento dei dati inseriti per essere ricontattato in merito alla mia richiesta.</label>
+          <label class="check"><input type="checkbox" name="privacy" required> Acconsento al trattamento dei dati inseriti per essere ricontattato in merito alla mia richiesta.<span class="req" aria-hidden="true">*</span></label>
           <span class="field-error" aria-live="polite"></span>
         </div>
         <div class="form-actions">
@@ -112,7 +113,7 @@
       <div class="success" tabindex="-1" hidden>
         <p class="pixel ember">Quest completata</p>
         <h2 class="title">Messaggio inviato!</h2>
-        <p class="xp-gain pixel">★ +100 XP</p>
+        <p class="xp-gain pixel">+100 XP</p>
         <p class="success-text lede">Grazie! Ti rispondo il prima possibile. Nel frattempo, dai un'occhiata ai lavori.</p>
         <a class="btn" href="lavori.html">Guarda i lavori <span class="arrow" aria-hidden="true">→</span></a>
       </div>

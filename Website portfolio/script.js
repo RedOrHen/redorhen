@@ -11,7 +11,6 @@
   const hasGSAP = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
   if (!hasGSAP) root.classList.remove('motion');
   const motion = root.classList.contains('motion');
-  const cameFromWipe = root.classList.contains('wiping');
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
   if (hasGSAP) gsap.registerPlugin(ScrollTrigger);
 
@@ -425,25 +424,6 @@
   }
 
   /* ---------------------------------------------------------------
-     Loader (solo Home, prima visita della sessione)
-     --------------------------------------------------------------- */
-  function runLoader() {
-    return new Promise((res) => {
-      const L = $('.loader');
-      if (!L) return res();
-      if (!motion || root.classList.contains('seen') || cameFromWipe) { L.remove(); return res(); }
-      store.set('ro-seen', '1');
-      const pct = $('.loader-pct', L);
-      const fill = $('.loader-fill', L);
-      const o = { v: 0 };
-      gsap.timeline({ onComplete: () => { L.remove(); res(); } })
-        .to(o, { v: 100, duration: 1.1, ease: 'power2.inOut', snap: { v: 1 }, onUpdate: () => { pct.textContent = `${o.v}%`; fill.style.transform = `scaleX(${o.v / 100})`; } })
-        .to($('.loader-start', L), { opacity: 1, duration: .05, repeat: 3, yoyo: true, ease: 'steps(1)' })
-        .to(L, { clipPath: 'inset(0 0 100% 0)', duration: .7, ease: 'expo.inOut' }, '+=.05');
-    });
-  }
-
-  /* ---------------------------------------------------------------
      Animazioni comuni
      --------------------------------------------------------------- */
   function commonReveals() {
@@ -538,8 +518,52 @@
     track.insertAdjacentHTML('afterbegin', html);
   }
 
+  // Titoli di testa della Home: partono subito, senza aspettare i lavori da Supabase,
+  // così titolo e foto sono visibili entro il primo secondo.
+  function heroIntro() {
+    if (!motion) return;
+    const heroPx = $('.hero-photo .px');
+    wipeDone.then(() => {
+      const tl = gsap.timeline();
+      tl.add(animateChars($$('.hero [data-chars]'), { stagger: .025, duration: 1 }), 0);
+      if (heroPx) {
+        tl.add(() => pixel.run(heroPx), 0);
+        tl.fromTo(heroPx, { scale: 1.12 }, { scale: 1, duration: 2.4, ease: 'power2.out' }, 0);
+      }
+      tl.fromTo($$('.hero [data-intro]'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .9, ease: 'expo.out', stagger: .08 }, .3);
+    });
+    // Barre letterbox che si ritirano + parallax
+    gsap.to('.hero-bar', { scaleY: 0, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: '40% top', scrub: true } });
+    gsap.to('.hero-photo', { yPercent: -12, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.to('.hero-content', { yPercent: 18, opacity: .2, ease: 'none', scrollTrigger: { trigger: '.hero', start: '30% top', end: 'bottom top', scrub: true } });
+  }
+
+  // Foto della storia (desktop e telefono) prese dai set veri; un set "Ivy" va al primo capitolo
+  function fillStory() {
+    const real = WORKS.filter((w) => !w.placeholder);
+    if (!real.length) return;
+    const pick = [];
+    const ivy = real.find((w) => /ivy/i.test(`${w.character} ${w.series}`));
+    if (ivy) pick.push(ivy);
+    real.forEach((w) => { if (pick.length < 3 && !pick.includes(w)) pick.push(w); });
+    // Con meno di 3 set si usano anche le altre foto dello stesso set
+    const photos = pick.map((w) => ({ w, p: w.photos[0] }));
+    for (let k = 1; photos.length < 3 && k < 12; k++) {
+      pick.forEach((w) => { if (photos.length < 3 && w.photos[k]) photos.push({ w, p: w.photos[k] }); });
+    }
+    photos.forEach(({ w, p }, i) => {
+      $$(`img[data-story="${i}"]`).forEach((img) => {
+        img.src = p.thumb || p.src;
+        img.width = p.w; img.height = p.h;
+        img.alt = p.alt || `${w.character}${w.series ? ' — ' + w.series : ''}`;
+        img.removeAttribute('data-ph');
+      });
+    });
+  }
+
   function home() {
     buildReel();
+    fillStory();
 
     // Timecode da cinepresa
     const tc = $('.timecode');
@@ -567,24 +591,6 @@
 
     if (!motion) return;
 
-    // Hero: titoli di testa
-    const heroPx = $('.hero-photo .px');
-    const intro = () => {
-      const tl = gsap.timeline();
-      tl.add(animateChars($$('.hero [data-chars]'), { stagger: .03, duration: 1.2 }), 0);
-      if (heroPx) {
-        tl.add(() => pixel.run(heroPx), .1);
-        tl.fromTo(heroPx, { scale: 1.15 }, { scale: 1, duration: 2.6, ease: 'power2.out' }, 0);
-      }
-      tl.fromTo($$('.hero [data-intro]'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1, ease: 'expo.out', stagger: .1 }, .5);
-    };
-    runLoader().then(() => wipeDone.then(intro));
-
-    // Barre letterbox che si ritirano + parallax
-    gsap.to('.hero-bar', { scaleY: 0, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: '40% top', scrub: true } });
-    gsap.to('.hero-photo', { yPercent: -12, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
-    gsap.to('.hero-content', { yPercent: 18, opacity: .2, ease: 'none', scrollTrigger: { trigger: '.hero', start: '30% top', end: 'bottom top', scrub: true } });
-
     // Contatori arcade
     $$('[data-count]').forEach((el) => {
       const target = +el.dataset.count;
@@ -603,7 +609,8 @@
     $$('[data-glitch]').forEach((el) => {
       ScrollTrigger.create({
         trigger: el, start: 'top 90%', once: true,
-        onEnter: () => gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: .08, repeat: 7, yoyo: true, ease: 'steps(1)' })
+        // repeat pari: con yoyo l'ultimo giro finisce "acceso" (con un numero dispari restava invisibile)
+        onEnter: () => gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: .08, repeat: 6, yoyo: true, ease: 'steps(1)', onComplete: () => gsap.set(el, { opacity: 1 }) })
       });
     });
 
@@ -719,7 +726,7 @@
     const items = $$('.work', grid);
     items.forEach((it) => pixel.observe($('.px', it)));
     const visible = () => items.filter((it) => !it.hidden);
-    const setCount = () => { if (counter) counter.textContent = String(visible().length).padStart(2, '0'); };
+    const setCount = () => { if (counter) counter.textContent = String(visible().length); };
     setCount();
 
     bar?.addEventListener('click', (e) => {
@@ -1077,6 +1084,8 @@
 
   // Immagini con effetto pixel presenti nell'HTML (escluse quelle gestite a mano)
   $$('.px').forEach((el) => { if (!el.hasAttribute('data-px-manual')) pixel.observe(el); });
+
+  if (page === 'home') heroIntro();
 
   (async () => {
   if (page === 'home' || page === 'lavori') {
