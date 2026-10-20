@@ -797,12 +797,20 @@
       if (SITE.formEndpoint) {
         btn.disabled = true;
         status.textContent = 'Invio in corso…';
+        data.set('pacchetto', sel?.selectedOptions[0]?.text || 'Non lo so ancora');
+        data.set('privacy', 'Accettata');
+        data.set('_subject', `Richiesta shooting — ${data.get('personaggio') || data.get('nome')}`);
         try {
           const r = await fetch(SITE.formEndpoint, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
-          if (!r.ok) throw new Error(r.status);
+          if (!r.ok) {
+            const j = await r.json().catch(() => ({}));
+            throw new Error((j.errors || []).map((x) => x.message).join(' ') || r.status);
+          }
+          form.reset();
           done();
         } catch (err) {
-          status.textContent = 'Ops, qualcosa non ha funzionato. Riprova o scrivimi direttamente.';
+          console.warn('Invio modulo non riuscito:', err.message);
+          status.textContent = 'Ops, qualcosa non ha funzionato. Riprova tra poco o scrivimi su Instagram.';
         } finally { btn.disabled = false; }
         return;
       }

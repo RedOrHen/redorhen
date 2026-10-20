@@ -7,7 +7,7 @@
 window.SITE = {
   email: 'Redorhen@gmail.com',        // es. 'ciao@redorhen.it'
   instagram: 'https://www.instagram.com/redorhen/',
-  formEndpoint: ''  // opzionale: URL di Formspree (o simile). Se vuoto, il modulo
+  formEndpoint: 'https://formspree.io/f/xvkzjrwl'  // Formspree. Se vuoto, il modulo
                     // contatti apre il programma di posta con il messaggio già scritto.
 };
 
