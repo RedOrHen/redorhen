@@ -343,6 +343,34 @@
     });
   }
 
+  // Protezione delle foto: niente menu "Salva immagine", trascinamento o pressione lunga.
+  // È un deterrente: chi sa usare gli strumenti del browser o fa uno screenshot può comunque copiarle.
+  (function protectPhotos() {
+    const PHOTO = 'img, .px, .lb-media, .work, .reel-frame, .hero-photo, .story-frame, .lightbox';
+    let note = null, noteTimer = null;
+    const notice = (x, y) => {
+      if (!note) {
+        note = document.createElement('div');
+        note.className = 'copy-note pixel';
+        note.setAttribute('role', 'status');
+        note.textContent = '© RedOrHen — foto protette';
+        document.body.appendChild(note);
+      }
+      note.style.left = `${Math.min(x, innerWidth - 240)}px`;
+      note.style.top = `${Math.max(12, y - 44)}px`;
+      note.classList.add('is-on');
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(() => note.classList.remove('is-on'), 1600);
+    };
+    document.addEventListener('contextmenu', (e) => {
+      if (!e.target.closest(PHOTO)) return;
+      e.preventDefault();
+      notice(e.clientX, e.clientY);
+    });
+    document.addEventListener('dragstart', (e) => { if (e.target.closest(PHOTO)) e.preventDefault(); });
+    $$('img').forEach((img) => img.setAttribute('draggable', 'false'));
+  })();
+
   // Vai a una pagina del sito con la transizione a blocchi pixel (se attiva)
   function goTo(href) {
     if (!motion || !wipe) { location.href = href; return; }
@@ -719,6 +747,7 @@
       <div class="lb-head">
         <p class="lb-title pixel"></p>
         <span class="lb-count pixel" aria-live="polite"></span>
+        <span class="lb-hint pixel" aria-hidden="true"></span>
       </div>
       <button class="lb-btn lb-close" type="button" aria-label="Chiudi">✕ Esc</button>
       <button class="lb-btn lb-full" type="button" aria-label="Schermo intero" aria-pressed="false">⤢</button>
@@ -747,7 +776,108 @@
       const s = Math.min(maxW / p.w, maxH / p.h);
       media.style.width = `${Math.round(p.w * s)}px`;
       media.style.height = `${Math.round(p.h * s)}px`;
+      zoom.reset();
     };
+
+    // Zoom: rotella e doppio clic con il mouse; due dita e doppio tocco su telefono.
+    // Da ingrandita la foto si sposta trascinandola.
+    const zoom = (() => {
+      let s = 1, tx = 0, ty = 0, gestured = false;
+      let pinch = null, pan = null, lastTap = 0, lastTapX = 0, lastTapY = 0, lastTouch = 0;
+      const ptrs = new Map();
+      const maxScale = () => {
+        const p = list[pos];
+        const w = media.offsetWidth || 1;
+        return Math.max(3, Math.min(8, ((p && p.w) || w) / w * 2));
+      };
+      const apply = (anim) => {
+        lbImg.style.transition = anim ? 'transform .35s cubic-bezier(.16, 1, .3, 1)' : 'none';
+        lbImg.style.transform = s === 1 ? '' : `translate(${tx}px, ${ty}px) scale(${s})`;
+        media.classList.toggle('is-zoomed', s > 1);
+        media.dataset.cursor = s > 1 ? 'Trascina' : 'Zoom';
+      };
+      const clamp = () => {
+        const w = media.offsetWidth, h = media.offsetHeight;
+        tx = Math.min(0, Math.max(w - w * s, tx));
+        ty = Math.min(0, Math.max(h - h * s, ty));
+      };
+      const zoomAt = (cx, cy, target, anim) => {
+        const r = media.getBoundingClientRect();
+        const ns = Math.max(1, Math.min(maxScale(), target));
+        const px = cx - r.left, py = cy - r.top;
+        tx = px - (px - tx) * (ns / s);
+        ty = py - (py - ty) * (ns / s);
+        s = ns;
+        if (s <= 1.001) { s = 1; tx = 0; ty = 0; }
+        clamp();
+        apply(anim);
+      };
+      const toggleAt = (cx, cy) => zoomAt(cx, cy, s > 1 ? 1 : 2.5, true);
+
+      media.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        zoomAt(e.clientX, e.clientY, s * Math.exp(-e.deltaY * 0.0018));
+      }, { passive: false });
+      media.addEventListener('dblclick', (e) => {
+        if (Date.now() - lastTouch < 800) return; // il doppio tocco è gestito sotto
+        toggleAt(e.clientX, e.clientY);
+      });
+      media.addEventListener('pointerdown', (e) => {
+        try { media.setPointerCapture(e.pointerId); } catch (x) { /* non indispensabile */ }
+        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
+        if (ptrs.size === 2) {
+          const [a, b] = [...ptrs.values()];
+          pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, s, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+          pan = null;
+          gestured = true;
+        } else if (ptrs.size === 1 && s > 1) {
+          pan = { x: e.clientX, y: e.clientY, tx, ty };
+        }
+      });
+      media.addEventListener('pointermove', (e) => {
+        const pt = ptrs.get(e.pointerId);
+        if (!pt) return;
+        pt.x = e.clientX; pt.y = e.clientY;
+        if (pinch && ptrs.size >= 2) {
+          const [a, b] = [...ptrs.values()];
+          const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+          tx += mx - pinch.mx; ty += my - pinch.my;
+          pinch.mx = mx; pinch.my = my;
+          zoomAt(mx, my, pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d);
+        } else if (pan) {
+          tx = pan.tx + (e.clientX - pan.x);
+          ty = pan.ty + (e.clientY - pan.y);
+          clamp();
+          apply(false);
+        }
+      });
+      const end = (e) => {
+        const pt = ptrs.get(e.pointerId);
+        if (!pt) return;
+        ptrs.delete(e.pointerId);
+        if (ptrs.size < 2) pinch = null;
+        if (ptrs.size === 1 && s > 1) { const [q] = [...ptrs.values()]; pan = { x: q.x, y: q.y, tx, ty }; }
+        else if (!ptrs.size) pan = null;
+        if (e.pointerType === 'touch') {
+          lastTouch = Date.now();
+          const still = Math.hypot(e.clientX - pt.sx, e.clientY - pt.sy) < 12;
+          if (e.type === 'pointerup' && !ptrs.size && still && !gestured) {
+            if (lastTouch - lastTap < 320 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 40) {
+              toggleAt(e.clientX, e.clientY);
+              lastTap = 0;
+            } else { lastTap = lastTouch; lastTapX = e.clientX; lastTapY = e.clientY; }
+          }
+        }
+      };
+      ['pointerup', 'pointercancel'].forEach((t) => media.addEventListener(t, end));
+
+      return {
+        reset() { s = 1; tx = 0; ty = 0; pinch = null; pan = null; ptrs.clear(); apply(false); },
+        active: () => s > 1 || gestured,
+        clearGesture() { gestured = false; },
+        zoomBy(f) { const r = media.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, s * f, true); }
+      };
+    })();
     let showToken = 0;
     const show = () => {
       const p = list[pos];
@@ -828,6 +958,9 @@
       if (e.key === 'Escape') close();
       if (e.key === 'ArrowRight') step(1);
       if (e.key === 'ArrowLeft') step(-1);
+      if (e.key === '+' || e.key === '=') zoom.zoomBy(1.5);
+      if (e.key === '-') zoom.zoomBy(1 / 1.5);
+      if (e.key === '0') zoom.reset();
       if (e.key === 'Tab') {
         const f = $$('button', lb);
         const first = f[0], last = f[f.length - 1];
@@ -838,6 +971,8 @@
     let sx = 0, sy = 0;
     lb.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
     lb.addEventListener('touchend', (e) => {
+      // Da ingrandita (o dopo un pizzico) lo scorrimento sposta la foto, non cambia foto
+      if (zoom.active()) { if (!e.touches.length) zoom.clearGesture(); return; }
       const dx = e.changedTouches[0].clientX - sx;
       const dy = e.changedTouches[0].clientY - sy;
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);

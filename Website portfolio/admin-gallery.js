@@ -51,6 +51,28 @@
   }
   const toBlob = (canvas, q = 0.86) => new Promise((res) => canvas.toBlob(res, 'image/jpeg', q));
 
+  // Foto oltre 20 MB: si ricomprime alla risoluzione piena con la qualità JPEG più alta
+  // che sta sotto il limite (95% → 85%); solo se non basta si riducono un po' le dimensioni.
+  async function fitUnderLimit(file) {
+    const { canvas: full, w0, h0 } = await resizeImage(file, Infinity);
+    for (let scale = 1; scale >= 0.5; scale = Math.round(scale * 0.9 * 1000) / 1000) {
+      let src = full;
+      if (scale < 1) {
+        src = document.createElement('canvas');
+        src.width = Math.round(w0 * scale);
+        src.height = Math.round(h0 * scale);
+        const ctx = src.getContext('2d');
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(full, 0, 0, src.width, src.height);
+      }
+      for (const q of [0.95, 0.93, 0.91, 0.89, 0.87, 0.85]) {
+        const blob = await toBlob(src, q);
+        if (blob && blob.size <= MAX_BYTES) return { blob, w: src.width, h: src.height, q, scale };
+      }
+    }
+    throw new Error('Impossibile ridurre la foto sotto i 20 MB');
+  }
+
   const fileUrl = (path) => `${CFG.supabaseUrl}/storage/v1/object/public/gallery/${String(path).split('/').map(encodeURIComponent).join('/')}`;
   // Nell'admin si mostra l'anteprima leggera (l'originale resta per il visualizzatore del sito)
   const publicUrl = (p) => p.src || fileUrl(p.thumb || p.path);
@@ -85,20 +107,26 @@
     },
     // L'originale viene caricato così com'è (nessuna ricompressione: qualità intatta);
     // in più si genera un'anteprima leggera per griglia, miniature e pellicola della Home.
-    async upload(setId, file) {
-      if (file.size > MAX_BYTES) throw new Error(`File troppo grande (${mb(file.size)}, massimo 20 MB)`);
-      const type = EXT[file.type] ? file.type : 'image/jpeg';
+    async upload(setId, file, onStep) {
       const { canvas, w0, h0 } = await resizeImage(file, THUMB_SIDE);
       const thumbBlob = await toBlob(canvas, 0.85);
+      let body = file, type = EXT[file.type] ? file.type : 'image/jpeg', w = w0, h = h0, reduced = null;
+      if (file.size > MAX_BYTES) {
+        onStep?.('riduco');
+        const r = await fitUnderLimit(file);
+        body = r.blob; type = 'image/jpeg'; w = r.w; h = r.h;
+        reduced = { from: file.size, to: r.blob.size, q: r.q, scale: r.scale };
+      }
+      onStep?.('carico');
       const base = `${setId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const path = `${base}.${EXT[type]}`;
       const thumb = `${base}-anteprima.jpg`;
       const bucket = sb.storage.from('gallery');
-      const up1 = await bucket.upload(path, file, { contentType: type, cacheControl: '31536000', upsert: false });
+      const up1 = await bucket.upload(path, body, { contentType: type, cacheControl: '31536000', upsert: false });
       if (up1.error) throw up1.error;
       const up2 = await bucket.upload(thumb, thumbBlob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
       if (up2.error) { await bucket.remove([path]); throw up2.error; }
-      return { path, thumb, w: w0, h: h0 };
+      return { path, thumb, w, h, reduced };
     },
     async removeFiles(photos) {
       const paths = photos.flatMap((p) => [p.path, p.thumb]).filter(Boolean);
@@ -128,7 +156,6 @@
     },
     async remove(s) { this.write(this.read().filter((r) => r.id !== s.id)); },
     async upload(setId, file) {
-      if (file.size > MAX_BYTES) throw new Error(`File troppo grande (${mb(file.size)}, massimo 20 MB)`);
       const { canvas, w, h } = await resizeImage(file, DEMO_SIDE);
       return { src: canvas.toDataURL('image/jpeg', 0.78), w, h };
     },
@@ -137,7 +164,8 @@
 
   const errText = (e) => {
     const m = (e && e.message) || '';
-    if (/esaurito|troppo grande/.test(m)) return m;
+    if (/esaurito|Impossibile ridurre/.test(m)) return m;
+    if (/maximum allowed size|exceeded/i.test(m)) return 'Supabase rifiuta il file: il limite del contenitore "gallery" è più basso di 20 MB (vedi supabase/LEGGIMI.md)';
     if (/fetch|network/i.test(m)) return 'Connessione assente: riprova';
     if (/row-level|policy|JWT|auth/i.test(m)) return 'Permesso negato: accedi di nuovo';
     if (/mime|size|too large/i.test(m)) return 'File non valido o troppo grande';
@@ -295,16 +323,22 @@
   async function addFiles(files) {
     const all = [...files].filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type));
     if (!all.length) { toast('Scegli file JPG, PNG o WebP', true); return; }
-    const big = all.filter((f) => f.size > MAX_BYTES);
-    const imgs = all.filter((f) => f.size <= MAX_BYTES);
-    const tooBig = big.length ? `Scartate perché oltre 20 MB: ${big.map((f) => `${f.name} (${mb(f.size)})`).join(', ')}` : '';
-    if (!imgs.length) { progress.textContent = tooBig; return; }
+    const imgs = all;
     busy++;
-    let done = 0, failed = 0;
+    let done = 0, failed = 0, lastErr = '';
+    const notes = [];
     for (const f of imgs) {
-      progress.textContent = `Caricamento ${done + 1} / ${imgs.length} — ${f.name} (${mb(f.size)})…`;
+      const label = `${done + 1} / ${imgs.length} — ${f.name} (${mb(f.size)})`;
+      progress.textContent = `Caricamento ${label}…`;
       try {
-        const p = await store.upload(draft.id, f);
+        const p = await store.upload(draft.id, f, (step) => {
+          progress.textContent = step === 'riduco' ? `Riduco sotto i 20 MB ${label}…` : `Caricamento ${label}…`;
+        });
+        if (p.reduced) {
+          const r = p.reduced;
+          notes.push(`${f.name}: ${mb(r.from)} → ${mb(r.to)} (qualità ${Math.round(r.q * 100)}%${r.scale < 1 ? `, dimensioni ${Math.round(r.scale * 100)}%` : ', risoluzione piena'})`);
+        }
+        delete p.reduced;
         p.alt = '';
         draft.photos.push(p);
         uploaded.push(p);
@@ -312,12 +346,16 @@
       } catch (e) {
         console.warn(e);
         failed++;
-        if (/esaurito/.test(e.message)) { progress.textContent = e.message; break; }
+        lastErr = errText(e);
+        if (/esaurito/.test(e.message)) break;
       }
       done++;
     }
     busy--;
-    progress.textContent = [failed ? `${done - failed} caricate, ${failed} non riuscite` : `${done} foto aggiunte ★`, tooBig].filter(Boolean).join(' · ');
+    progress.textContent = [
+      failed ? `${done - failed} caricate, ${failed} non riuscite: ${lastErr}` : `${done} foto aggiunte ★`,
+      notes.length ? `Ridotte: ${notes.join(' · ')}` : ''
+    ].filter(Boolean).join(' · ');
   }
 
   $('#g-files').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });

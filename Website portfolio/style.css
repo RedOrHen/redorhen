@@ -874,3 +874,31 @@ main { display: block; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .marquee-track { animation: none; }
 }
+
+/* ---------- Zoom nel visualizzatore ---------- */
+
+.lb-media { overflow: hidden; touch-action: none; cursor: zoom-in; }
+.lb-media img { transform-origin: 0 0; }
+.lb-media.is-zoomed { cursor: grab; }
+.lb-media.is-zoomed:active { cursor: grabbing; }
+.lb-hint { color: var(--dust); font-size: 10px; opacity: .8; }
+.lb-hint::after { content: 'Rotella o doppio clic: zoom'; }
+@media (hover: none) { .lb-hint::after { content: 'Pizzica o doppio tocco: zoom'; } }
+.has-cursor .lb-media, .has-cursor .lb-media * { cursor: none; }
+
+/* ---------- Protezione foto ---------- */
+
+img, .px, .lb-media {
+  -webkit-user-select: none; user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+.copy-note {
+  position: fixed; z-index: 120; pointer-events: none;
+  padding: 8px 11px; font-size: 11px;
+  background: var(--ember); color: var(--ink);
+  box-shadow: 4px 4px 0 var(--rust);
+  opacity: 0; transform: translateY(6px);
+  transition: opacity .2s, transform .3s var(--ease);
+}
+.copy-note.is-on { opacity: 1; transform: none; }
