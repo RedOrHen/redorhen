@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin — RedOrHen</title>
+  <meta name="theme-color" content="#120B07">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin">
+
+  <!-- LOGIN -->
+  <main class="login" id="login" hidden>
+    <form class="login-card" id="login-form" novalidate>
+      <p class="kicker">Area admin</p>
+      <h1>Press<br>start</h1>
+      <label class="a-field">
+        <span>Email</span>
+        <input type="email" name="email" autocomplete="username" required>
+      </label>
+      <label class="a-field">
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <p class="login-error pixel" role="alert"></p>
+      <button class="btn" type="submit">Entra <span class="arrow" aria-hidden="true">▶</span></button>
+      <a class="pixel muted" href="index.html" style="font-size:11px">◀ Torna al sito</a>
+    </form>
+  </main>
+
+  <!-- APP -->
+  <div id="app" hidden>
+    <header class="admin-top">
+      <a class="brand" href="index.html" aria-label="Torna al sito"><span class="brand-mark" aria-hidden="true"></span>REDORHEN <span class="admin-tag pixel">Admin</span></a>
+      <div class="admin-user">
+        <span class="pixel muted" id="user-email"></span>
+        <button class="btn-sm" type="button" id="logout">Esci</button>
+      </div>
+    </header>
+    <p class="demo-banner" id="demo-banner" hidden>
+      ▲ Modalità demo: gli appuntamenti sono salvati solo in questo browser. Per attivare login e salvataggio protetto compila assets/data/admin-config.js (vedi supabase/LEGGIMI.md).
+    </p>
+
+    <div class="cal-shell">
+      <section class="cal-main" aria-label="Calendario">
+        <div class="cal-toolbar">
+          <h1 class="cal-title" id="cal-title" aria-live="polite"></h1>
+          <div class="cal-actions">
+            <div class="cal-nav">
+              <button class="btn-sm icon" type="button" data-nav="-1" aria-label="Periodo precedente">◀</button>
+              <button class="btn-sm" type="button" data-nav="0">Oggi</button>
+              <button class="btn-sm icon" type="button" data-nav="1" aria-label="Periodo successivo">▶</button>
+            </div>
+            <div class="cal-views" role="group" aria-label="Vista">
+              <button class="btn-sm" type="button" data-view="month">Mese</button>
+              <button class="btn-sm view-week" type="button" data-view="week">Settimana</button>
+              <button class="btn-sm" type="button" data-view="day">Giorno</button>
+            </div>
+            <button class="btn" type="button" id="new-ev">+ Nuovo</button>
+          </div>
+        </div>
+        <div id="cal-view"></div>
+      </section>
+
+      <aside class="cal-side">
+        <div class="side-box" id="day-box" hidden>
+          <h2 id="day-box-title"></h2>
+          <div class="agenda" id="day-agenda"></div>
+          <button class="btn-sm" type="button" id="day-add">+ Aggiungi in questo giorno</button>
+        </div>
+        <div class="side-box">
+          <h2>Prossimi</h2>
+          <div class="agenda" id="upcoming"></div>
+        </div>
+        <div class="side-box">
+          <p class="pixel muted" style="font-size:11px">Categorie</p>
+          <div class="legend" id="legend"></div>
+          <p class="kbd">Scorciatoie: <kbd>N</kbd> nuovo · <kbd>T</kbd> oggi · <kbd>←</kbd> <kbd>→</kbd> periodo · <kbd>M</kbd> <kbd>S</kbd> <kbd>G</kbd> vista. Trascina un appuntamento per spostarlo.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- EDITOR APPUNTAMENTO -->
+  <dialog class="ev-dialog" id="ev-dialog" aria-labelledby="ev-title">
+    <form class="ev-form" id="ev-form" method="dialog" novalidate>
+      <h2 id="ev-title">Nuovo appuntamento</h2>
+      <div class="ev-grid">
+        <label class="a-field full">
+          <span>Titolo</span>
+          <input name="title" type="text" maxlength="200" required placeholder="es. Shooting Poison Ivy">
+        </label>
+        <div class="a-field full">
+          <span>Categoria</span>
+          <div class="cats" id="cats"></div>
+        </div>
+        <label class="a-check full"><input type="checkbox" name="allDay"> Tutto il giorno</label>
+        <label class="a-field">
+          <span>Data</span>
+          <input name="date" type="date" required>
+        </label>
+        <label class="a-field" data-allday-only hidden>
+          <span>Fino al</span>
+          <input name="endDate" type="date">
+        </label>
+        <div class="ev-grid" data-timed-only style="gap:14px">
+          <label class="a-field">
+            <span>Inizio</span>
+            <input name="start" type="time" step="900" required>
+          </label>
+          <label class="a-field">
+            <span>Fine</span>
+            <input name="end" type="time" step="900" required>
+          </label>
+        </div>
+        <label class="a-field">
+          <span>Cosplayer / cliente</span>
+          <input name="client" type="text" maxlength="200" placeholder="es. @nomecosplayer">
+        </label>
+        <label class="a-field">
+          <span>Luogo</span>
+          <input name="location" type="text" maxlength="200" placeholder="es. Parco, studio, fiera">
+        </label>
+        <label class="a-field full">
+          <span>Note</span>
+          <textarea name="notes" maxlength="4000" placeholder="Idee, attrezzatura, accordi…"></textarea>
+        </label>
+      </div>
+      <p class="ev-error" role="alert"></p>
+      <div class="ev-actions">
+        <button class="btn-sm btn-danger" type="button" id="ev-delete">Elimina</button>
+        <div>
+          <button class="btn-sm" type="button" id="ev-cancel">Annulla</button>
+          <button class="btn" type="submit">Salva</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/data/admin-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
