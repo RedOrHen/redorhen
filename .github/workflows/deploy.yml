@@ -19,7 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: withastro/action@v4
+      # Sito statico: nessuna build, si pubblicano solo i file del sito
+      # (esclusi Media/, BUILD-PLAN.md e la configurazione locale).
+      - name: Prepara i file del sito
+        working-directory: Website portfolio
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/_site"
+          cp -r index.html lavori.html listino.html contatti.html style.css script.js assets "$GITHUB_WORKSPACE/_site/"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
   deploy:
     needs: build

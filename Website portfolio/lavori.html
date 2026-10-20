@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lavori — RedOrHen, fotografia cosplay</title>
+  <meta name="description" content="Sfoglia i lavori di RedOrHen: fotografia cosplay costruita attorno al personaggio, alla sua luce e al suo mondo.">
+  <meta name="theme-color" content="#120B07">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Lavori — RedOrHen, fotografia cosplay">
+  <meta property="og:description" content="Ogni cosplay merita la sua scena.">
+  <meta property="og:image" content="assets/works/fata-girasoli.jpg">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function (d) {
+      var c = d.documentElement.classList; c.add('js');
+      try {
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) c.add('motion');
+        if (sessionStorage.getItem('ro-seen')) c.add('seen');
+        if (sessionStorage.getItem('ro-wipe')) c.add('wiping');
+      } catch (e) {}
+      setTimeout(function () { if (!window.__ro) { c.remove('motion'); c.remove('wiping'); } }, 4000);
+    })(document);
+  </script>
+</head>
+<body data-page="lavori">
+  <a class="skip" href="#main">Salta al contenuto</a>
+  <div class="wipe" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="xp" aria-hidden="true"><span></span></div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="RedOrHen, torna alla home"><span class="brand-mark" aria-hidden="true"></span>REDORHEN</a>
+    <nav class="nav" aria-label="Principale">
+      <a href="lavori.html" data-page-link="lavori">Lavori</a>
+      <a href="listino.html" data-page-link="listino">Listino</a>
+      <a href="contatti.html" data-page-link="contatti">Contatti</a>
+    </nav>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+  </header>
+  <div class="menu" id="menu" hidden>
+    <nav aria-label="Menu mobile">
+      <a href="index.html" data-page-link="home">Home</a>
+      <a href="lavori.html" data-page-link="lavori">Lavori</a>
+      <a href="listino.html" data-page-link="listino">Listino</a>
+      <a href="contatti.html" data-page-link="contatti">Contatti</a>
+    </nav>
+    <p class="pixel muted">▶ Fotografia cosplay</p>
+  </div>
+
+  <main id="main">
+    <section class="page-hero" data-intro-scope aria-labelledby="page-title">
+      <p class="kicker" data-intro>Archivio scene</p>
+      <h1 class="title" id="page-title"><span class="line"><span data-chars>I lavori</span></span></h1>
+      <div class="page-hero-row" data-intro>
+        <p class="lede">Ogni foto è un fotogramma: personaggio, luce e ambiente pensati insieme. Tocca una foto per vederla a tutto schermo.</p>
+        <p class="pixel"><span class="scene-count ember">00</span> scene</p>
+      </div>
+    </section>
+
+    <div class="filters" role="group" aria-label="Filtra per universo"></div>
+    <div class="gallery"></div>
+
+    <section class="gallery-cta" aria-labelledby="cta-title">
+      <p class="kicker" data-reveal>Player 2?</p>
+      <h2 class="title" id="cta-title">
+        <span class="line"><span data-chars>Ti piace</span></span>
+        <span class="line"><span data-chars>quello che vedi?</span></span>
+      </h2>
+      <div class="hero-ctas" data-reveal>
+        <a class="btn" href="contatti.html" data-magnetic>Prenota uno shooting <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="link-pixel" href="listino.html">Vedi il listino</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div>
+        <p class="pixel muted">Naviga</p>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="lavori.html">Lavori</a></li>
+          <li><a href="listino.html">Listino</a></li>
+          <li><a href="contatti.html">Contatti</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="pixel muted">Social</p>
+        <ul>
+          <li><a data-site="instagram" target="_blank" rel="noopener">Instagram</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="pixel muted">Scrivimi</p>
+        <ul>
+          <li><a data-site="email">Email</a></li>
+          <li><a href="contatti.html">Richiedi uno shooting</a></li>
+        </ul>
+      </div>
+      <div class="footer-note">
+        <p>Fotografia cosplay fatta con calma, cura e tanta voglia di divertirsi. Ogni foto è ritoccata a mano.</p>
+      </div>
+    </div>
+    <p class="footer-logo" aria-hidden="true">REDORHEN</p>
+    <div class="footer-bottom">
+      <span>© 2026 RedOrHen — Fotografia cosplay</span>
+      <button class="to-top" type="button">Game over? No, torna su ▲</button>
+    </div>
+  </footer>
+
+  <script src="assets/data/works.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
