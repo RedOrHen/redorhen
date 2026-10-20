@@ -18,7 +18,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const page = document.body.dataset.page || '';
-  const WORKS = window.WORKS || [];
+  let WORKS = window.WORKS || [];
   const SITE = window.SITE || {};
 
   const store = {
@@ -52,9 +52,49 @@
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
 
+  /* ---------------------------------------------------------------
+     Set di foto: da Supabase (gestiti dall'area admin) oppure da works.js
+     --------------------------------------------------------------- */
+  const DB = window.ADMIN_CONFIG || {};
+  const GALLERY_DEMO_KEY = 'ro-gallery-demo';
+  const publicUrl = (path) => (/^(https?:|data:)/.test(path)
+    ? path
+    : `${DB.supabaseUrl}/storage/v1/object/public/gallery/${String(path).split('/').map(encodeURIComponent).join('/')}`);
+  const rowToWork = (r) => ({
+    character: r.character || '', series: r.series || '', category: r.category || '',
+    cosplayer: r.cosplayer || '', featured: !!r.featured,
+    photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), w: p.w, h: p.h, alt: p.alt }))
+  });
+
+  async function loadRemoteWorks() {
+    // Anteprima della modalità demo dell'area admin: lavori.html?demo
+    if (new URLSearchParams(location.search).has('demo')) {
+      try {
+        const d = JSON.parse(localStorage.getItem(GALLERY_DEMO_KEY));
+        if (Array.isArray(d) && d.length) {
+          const sets = d.filter((x) => x.published !== false).map(rowToWork).filter((w) => w.photos.length);
+          if (sets.length) return sets;
+        }
+      } catch (e) { /* nessuna anteprima */ }
+    }
+    if (!DB.supabaseUrl || !DB.supabaseAnonKey) return null;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3500);
+    try {
+      const headers = { apikey: DB.supabaseAnonKey };
+      if (DB.supabaseAnonKey.startsWith('eyJ')) headers.Authorization = `Bearer ${DB.supabaseAnonKey}`;
+      const res = await fetch(`${DB.supabaseUrl}/rest/v1/gallery_sets?select=character,series,category,cosplayer,featured,photos&published=eq.true&order=position.asc,created_at.asc`, { headers, signal: ctrl.signal });
+      if (!res.ok) return null;
+      const sets = (await res.json()).map(rowToWork).filter((w) => w.photos.length);
+      return sets.length ? sets : null;
+    } catch (e) {
+      return null; // offline o Supabase non raggiungibile: si usa works.js
+    } finally { clearTimeout(timer); }
+  }
+
   // Ogni voce di WORKS è un set (una "cartella") di foto: la prima è la copertina.
   const PH_RATIOS = [[800, 1120], [800, 1000], [800, 1200], [1120, 800]];
-  WORKS.forEach((w, i) => {
+  const normalizeWorks = () => WORKS.forEach((w, i) => {
     w.index = i;
     let photos = Array.isArray(w.photos) ? w.photos.filter((p) => p && p.src) : [];
     if (!photos.length && w.src) photos = [{ src: w.src, w: w.w, h: w.h, alt: w.alt }];
@@ -842,6 +882,13 @@
   // Immagini con effetto pixel presenti nell'HTML (escluse quelle gestite a mano)
   $$('.px').forEach((el) => { if (!el.hasAttribute('data-px-manual')) pixel.observe(el); });
 
+  (async () => {
+  if (page === 'home' || page === 'lavori') {
+    const remote = await loadRemoteWorks();
+    if (remote) WORKS = remote;
+  }
+  normalizeWorks();
+
   if (page === 'home') home();
   if (page === 'lavori') lavori();
   if (page === 'contatti') contatti();
@@ -864,4 +911,5 @@
     staticReveals();
     $$('.px').forEach((el) => el.classList.add('px-done'));
   }
+  })();
 })();

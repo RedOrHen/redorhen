@@ -25,7 +25,7 @@ jobs:
         working-directory: Website portfolio
         run: |
           mkdir -p "$GITHUB_WORKSPACE/_site"
-          cp -r index.html lavori.html listino.html contatti.html admin.html style.css script.js admin.css admin.js assets "$GITHUB_WORKSPACE/_site/"
+          cp -r index.html lavori.html listino.html contatti.html admin.html style.css script.js admin.css admin.js admin-gallery.js assets "$GITHUB_WORKSPACE/_site/"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

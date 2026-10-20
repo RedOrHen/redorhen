@@ -38,16 +38,34 @@
   <div id="app" hidden>
     <header class="admin-top">
       <a class="brand" href="index.html" aria-label="Torna al sito"><span class="brand-mark" aria-hidden="true"></span>REDORHEN <span class="admin-tag pixel">Admin</span></a>
+      <nav class="admin-tabs" aria-label="Sezioni admin">
+        <button class="btn-sm is-active" type="button" data-tab="calendar" aria-pressed="true">Calendario</button>
+        <button class="btn-sm" type="button" data-tab="gallery" aria-pressed="false">Lavori</button>
+      </nav>
       <div class="admin-user">
         <span class="pixel muted" id="user-email"></span>
         <button class="btn-sm" type="button" id="logout">Esci</button>
       </div>
     </header>
     <p class="demo-banner" id="demo-banner" hidden>
-      ▲ Modalità demo: gli appuntamenti sono salvati solo in questo browser. Per attivare login e salvataggio protetto compila assets/data/admin-config.js (vedi supabase/LEGGIMI.md).
+      ▲ Modalità demo: appuntamenti e set sono salvati solo in questo browser e il sito pubblico non li vede. Per attivare login e salvataggio protetto compila assets/data/admin-config.js (vedi supabase/LEGGIMI.md).
     </p>
 
-    <div class="cal-shell">
+    <!-- LAVORI -->
+    <section class="g-shell" id="tab-gallery" hidden aria-label="Gestione lavori">
+      <div class="cal-toolbar">
+        <h1 class="cal-title">Lavori</h1>
+        <div class="cal-actions">
+          <a class="btn-sm" id="g-preview" href="lavori.html" target="_blank" rel="noopener">Vedi la pagina ↗</a>
+          <button class="btn-sm" type="button" id="g-import">Importa da works.js</button>
+          <button class="btn" type="button" id="g-new">+ Nuovo set</button>
+        </div>
+      </div>
+      <p class="g-hint">Ogni set è un riquadro della pagina Lavori; la prima foto è la copertina. Usa ▲ ▼ per cambiare l'ordine. Finché non c'è almeno un set pubblicato con foto, il sito mostra i lavori di works.js.</p>
+      <div class="g-list" id="g-list"></div>
+    </section>
+
+    <div class="cal-shell" id="tab-calendar">
       <section class="cal-main" aria-label="Calendario">
         <div class="cal-toolbar">
           <h1 class="cal-title" id="cal-title" aria-live="polite"></h1>
@@ -86,6 +104,52 @@
       </aside>
     </div>
   </div>
+
+  <!-- EDITOR SET -->
+  <dialog class="ev-dialog g-dialog" id="g-dialog" aria-labelledby="g-title">
+    <form class="ev-form" id="g-form" method="dialog" novalidate>
+      <h2 id="g-title">Nuovo set</h2>
+      <div class="ev-grid">
+        <label class="a-field full">
+          <span>Personaggio</span>
+          <input name="character" type="text" maxlength="200" required placeholder="es. Poison Ivy">
+        </label>
+        <label class="a-field">
+          <span>Serie / universo</span>
+          <input name="series" type="text" maxlength="200" placeholder="es. DC Comics">
+        </label>
+        <label class="a-field">
+          <span>Categoria (filtro)</span>
+          <input name="category" type="text" maxlength="60" list="g-cats" placeholder="es. Fumetti">
+          <datalist id="g-cats"></datalist>
+        </label>
+        <label class="a-field full">
+          <span>Cosplayer</span>
+          <input name="cosplayer" type="text" maxlength="200" placeholder="es. @nomecosplayer">
+        </label>
+        <label class="a-check"><input type="checkbox" name="published" checked> Pubblicato</label>
+        <label class="a-check"><input type="checkbox" name="featured"> Mostra nella pellicola della Home</label>
+        <div class="a-field full">
+          <span>Foto <em class="g-count"></em></span>
+          <label class="g-drop" id="g-drop">
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple id="g-files">
+            <b>Trascina qui le foto</b> o clicca per sceglierle
+            <small>JPG, PNG o WebP · le ridimensiono automaticamente</small>
+          </label>
+          <p class="g-progress pixel" aria-live="polite"></p>
+          <div class="g-photos" id="g-photos"></div>
+        </div>
+      </div>
+      <p class="ev-error" role="alert"></p>
+      <div class="ev-actions">
+        <button class="btn-sm btn-danger" type="button" id="g-delete">Elimina set</button>
+        <div>
+          <button class="btn-sm" type="button" id="g-cancel">Annulla</button>
+          <button class="btn" type="submit">Salva</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
 
   <!-- EDITOR APPUNTAMENTO -->
   <dialog class="ev-dialog" id="ev-dialog" aria-labelledby="ev-title">
@@ -147,6 +211,8 @@
 
   <script src="assets/data/admin-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="assets/data/works.js"></script>
   <script src="admin.js"></script>
+  <script src="admin-gallery.js"></script>
 </body>
 </html>

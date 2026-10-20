@@ -1,5 +1,12 @@
 # Area admin: come attivarla con Supabase
 
+L'area admin ha due schede:
+
+- **Calendario**: i tuoi appuntamenti (visibili solo a te).
+- **Lavori**: crei, modifichi, riordini ed elimini i set di foto della pagina Lavori e carichi le foto
+  dal browser. Appena c'è almeno un set pubblicato con foto, il sito pubblico mostra quelli al posto
+  di `works.js`. Con **Importa da works.js** copi su Supabase i set che hai già nel file.
+
 L'area admin è all'indirizzo `admin.html` del sito (es. `https://redorhen.github.io/redorhen/admin.html`).
 Non è collegata dal menu e i motori di ricerca non la indicizzano.
 
@@ -18,7 +25,8 @@ e visibili da qualsiasi dispositivo, segui questi passi (circa 10 minuti).
 
 1. Nel menu a sinistra: **SQL Editor** → **New query**.
 2. Copia tutto il contenuto di `supabase/setup.sql`, incollalo e premi **Run**.
-3. Deve comparire "Success. No rows returned".
+3. Deve comparire "Success. No rows returned". Lo script crea anche la tabella dei set e lo spazio
+   "gallery" per le foto (lettura pubblica, caricamento solo dopo il login).
 
 ## 3. Blocca le iscrizioni e crea il tuo utente
 
@@ -46,8 +54,12 @@ e visibili da qualsiasi dispositivo, segui questi passi (circa 10 minuti).
 ## Da sapere
 
 - La chiave anon è pubblica per scelta di Supabase: la sicurezza è data dalle regole
-  (Row Level Security) create da `setup.sql`. Senza login il database non restituisce nulla.
-- Gli appuntamenti creati in modalità demo restano nel browser e non vengono copiati su Supabase.
+  (Row Level Security) create da `setup.sql`. Senza login si possono solo leggere i set pubblicati
+  della galleria (servono al sito); gli appuntamenti e i set in bozza restano invisibili.
+- Appuntamenti e set creati in modalità demo restano nel browser e non vengono copiati su Supabase.
+  In demo puoi vedere l'anteprima della galleria su `lavori.html?demo`.
+- Le foto vengono ridimensionate a 2400 px sul lato lungo prima del caricamento: il piano gratuito
+  include 1 GB di spazio, cioè circa un migliaio di foto.
 - Sul piano gratuito Supabase mette in pausa i progetti che non ricevono richieste per circa una
   settimana: se succede, riattivalo dalla dashboard con **Restore project**.
 - Password dimenticata: cambiala da **Authentication** → **Users** → il tuo utente.

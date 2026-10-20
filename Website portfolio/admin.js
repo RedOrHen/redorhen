@@ -588,7 +588,7 @@
   });
 
   document.addEventListener('keydown', (e) => {
-    if ($('#app').hidden || dlg.open || e.ctrlKey || e.metaKey || e.altKey) return;
+    if ($('#app').hidden || $('#tab-calendar').hidden || document.querySelector('dialog[open]') || e.ctrlKey || e.metaKey || e.altKey) return;
     if (/input|textarea|select/i.test(e.target.tagName)) return;
     const k = e.key.toLowerCase();
     if (k === 'n') { e.preventDefault(); $('#new-ev').click(); }
@@ -611,11 +611,15 @@
     $('#demo-banner').hidden = !!user;
     $('#logout').hidden = !user;
     refresh();
+    window.RO_ADMIN = { sb: user ? sb : null, toast };
+    window.dispatchEvent(new CustomEvent('ro-admin-ready', { detail: window.RO_ADMIN }));
   }
   function showLogin() {
     $('#app').hidden = true;
     $('#login').hidden = false;
     state.events = [];
+    window.RO_ADMIN = null;
+    window.dispatchEvent(new CustomEvent('ro-admin-logout'));
     setTimeout(() => $('#login-form').email.focus(), 30);
   }
 
