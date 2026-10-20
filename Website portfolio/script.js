@@ -63,7 +63,8 @@
   const rowToWork = (r) => ({
     character: r.character || '', series: r.series || '', category: r.category || '',
     cosplayer: r.cosplayer || '', featured: !!r.featured,
-    photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), w: p.w, h: p.h, alt: p.alt }))
+    // src = originale in piena qualità; thumb = anteprima leggera per griglia e miniature
+    photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), thumb: p.thumb ? publicUrl(p.thumb) : undefined, w: p.w, h: p.h, alt: p.alt }))
   });
 
   async function loadRemoteWorks() {
@@ -113,7 +114,7 @@
     });
     w.photos = photos;
     // La copertina rappresenta il set nella griglia e nella pellicola della Home
-    Object.assign(w, { src: photos[0].src, w: photos[0].w, h: photos[0].h, alt: photos[0].alt });
+    Object.assign(w, { src: photos[0].thumb || photos[0].src, w: photos[0].w, h: photos[0].h, alt: photos[0].alt });
   });
 
   // <img data-ph="Titolo|Sottotitolo" data-ph-i="2"> nell'HTML
@@ -720,6 +721,7 @@
         <span class="lb-count pixel" aria-live="polite"></span>
       </div>
       <button class="lb-btn lb-close" type="button" aria-label="Chiudi">✕ Esc</button>
+      <button class="lb-btn lb-full" type="button" aria-label="Schermo intero" aria-pressed="false">⤢</button>
       <button class="lb-btn lb-prev" type="button" aria-label="Foto precedente">◀</button>
       <button class="lb-btn lb-next" type="button" aria-label="Foto successiva">▶</button>
       <figure class="lb-figure">
@@ -735,18 +737,33 @@
     const thumbs = $('.lb-thumbs', lb);
     let set = null, list = [], pos = 0, opener = null;
 
+    // La foto occupa tutto lo spazio disponibile
     const fit = (p) => {
-      const maxW = innerWidth - (innerWidth < 700 ? 32 : 220);
-      const maxH = innerHeight * (innerWidth < 700 ? .5 : .6) + (list.length > 1 ? 0 : 60);
+      const mobile = innerWidth < 700;
+      const full = document.fullscreenElement === lb;
+      const maxW = innerWidth - (mobile ? 24 : full ? 160 : 200);
+      const reserved = (full ? 0 : innerHeight * 0.14) + (mobile ? 120 : 70) + (list.length > 1 ? 84 : 0);
+      const maxH = innerHeight - reserved;
       const s = Math.min(maxW / p.w, maxH / p.h);
       media.style.width = `${Math.round(p.w * s)}px`;
       media.style.height = `${Math.round(p.h * s)}px`;
     };
+    let showToken = 0;
     const show = () => {
       const p = list[pos];
+      const token = ++showToken;
       fit(p);
-      lbImg.src = p.src;
+      // Prima l'anteprima (veloce), poi l'originale in piena qualità appena è scaricato
+      lbImg.src = p.thumb || p.src;
       lbImg.alt = p.alt;
+      if (p.thumb && p.thumb !== p.src) {
+        media.classList.add('is-loading');
+        const full = new Image();
+        full.decoding = 'async';
+        full.onload = () => { if (token === showToken) { lbImg.src = p.src; media.classList.remove('is-loading'); } };
+        full.onerror = () => { if (token === showToken) media.classList.remove('is-loading'); };
+        full.src = p.src;
+      } else media.classList.remove('is-loading');
       cnt.textContent = `${String(pos + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
       $$('.lb-thumb', thumbs).forEach((t, k) => {
         t.classList.toggle('is-active', k === pos);
@@ -755,7 +772,7 @@
       });
       pixel.run(lbPx);
       const next = list[(pos + 1) % list.length];
-      if (next && !next.placeholder) { const pre = new Image(); pre.src = next.src; }
+      if (next && !next.placeholder) { const pre = new Image(); pre.src = next.thumb || next.src; }
     };
     const open = (i, from) => {
       set = WORKS[i];
@@ -765,7 +782,7 @@
       title.innerHTML = `<span>${esc(set.character)}</span><span class="muted">${esc(set.series)}</span>${set.cosplayer ? `<span class="ember">${esc(set.cosplayer)}</span>` : ''}`;
       thumbs.innerHTML = list.length > 1 ? list.map((p, k) => `
         <button class="lb-thumb" type="button" data-k="${k}" aria-label="Foto ${k + 1} di ${list.length}">
-          <img src="${esc(p.src)}" alt="" width="${p.w}" height="${p.h}" loading="lazy" decoding="async">
+          <img src="${esc(p.thumb || p.src)}" alt="" width="${p.w}" height="${p.h}" loading="lazy" decoding="async">
         </button>`).join('') : '';
       lb.classList.toggle('is-single', list.length < 2);
       lb.hidden = false;
@@ -778,7 +795,20 @@
       const t = e.target.closest('.lb-thumb');
       if (t) { pos = +t.dataset.k; show(); }
     });
+    const fullBtn = $('.lb-full', lb);
+    if (!lb.requestFullscreen) fullBtn.hidden = true;
+    fullBtn.addEventListener('click', () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else lb.requestFullscreen().catch(() => {});
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const on = document.fullscreenElement === lb;
+      fullBtn.setAttribute('aria-pressed', String(on));
+      fullBtn.textContent = on ? '⤡' : '⤢';
+      if (!lb.hidden) fit(list[pos]);
+    });
     const close = () => {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       lb.hidden = true;
       lockScroll(false);
       opener?.focus();

@@ -13,8 +13,11 @@
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   }));
-  const MAX_SIDE = 2400;     // lato lungo delle foto caricate su Supabase
+  const MAX_BYTES = 20 * 1024 * 1024; // peso massimo di una foto originale
+  const THUMB_SIDE = 1600;   // lato lungo dell'anteprima per griglia e miniature
   const DEMO_SIDE = 1200;    // in demo le foto stanno nel browser: più piccole
+  const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  const mb = (n) => `${(n / 1048576).toFixed(1).replace('.', ',')} MB`;
   const DEMO_KEY = 'ro-gallery-demo';
 
   let toast = (m) => console.log(m);
@@ -44,17 +47,19 @@
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(bmp, 0, 0, w, h);
     bmp.close?.();
-    return { canvas: c, w, h };
+    return { canvas: c, w, h, w0, h0 };
   }
   const toBlob = (canvas, q = 0.86) => new Promise((res) => canvas.toBlob(res, 'image/jpeg', q));
 
-  const publicUrl = (p) => p.src || `${CFG.supabaseUrl}/storage/v1/object/public/gallery/${String(p.path).split('/').map(encodeURIComponent).join('/')}`;
+  const fileUrl = (path) => `${CFG.supabaseUrl}/storage/v1/object/public/gallery/${String(path).split('/').map(encodeURIComponent).join('/')}`;
+  // Nell'admin si mostra l'anteprima leggera (l'originale resta per il visualizzatore del sito)
+  const publicUrl = (p) => p.src || fileUrl(p.thumb || p.path);
 
   /* ---------- Storage ---------- */
   const cleanRow = (s) => ({
     id: s.id, character: s.character, series: s.series || null, category: s.category || null,
     cosplayer: s.cosplayer || null, featured: !!s.featured, published: s.published !== false,
-    position: s.position || 0, photos: s.photos.map((p) => (p.path ? { path: p.path, w: p.w, h: p.h, alt: p.alt || null } : p))
+    position: s.position || 0, photos: s.photos.map((p) => (p.path ? { path: p.path, thumb: p.thumb || null, w: p.w, h: p.h, alt: p.alt || null } : p))
   });
 
   const RemoteStore = (sb) => ({
@@ -78,16 +83,25 @@
       if (error) throw error;
       await this.removeFiles(s.photos);
     },
+    // L'originale viene caricato così com'è (nessuna ricompressione: qualità intatta);
+    // in più si genera un'anteprima leggera per griglia, miniature e pellicola della Home.
     async upload(setId, file) {
-      const { canvas, w, h } = await resizeImage(file, MAX_SIDE);
-      const blob = await toBlob(canvas);
-      const path = `${setId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-      const { error } = await sb.storage.from('gallery').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
-      if (error) throw error;
-      return { path, w, h };
+      if (file.size > MAX_BYTES) throw new Error(`File troppo grande (${mb(file.size)}, massimo 20 MB)`);
+      const type = EXT[file.type] ? file.type : 'image/jpeg';
+      const { canvas, w0, h0 } = await resizeImage(file, THUMB_SIDE);
+      const thumbBlob = await toBlob(canvas, 0.85);
+      const base = `${setId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const path = `${base}.${EXT[type]}`;
+      const thumb = `${base}-anteprima.jpg`;
+      const bucket = sb.storage.from('gallery');
+      const up1 = await bucket.upload(path, file, { contentType: type, cacheControl: '31536000', upsert: false });
+      if (up1.error) throw up1.error;
+      const up2 = await bucket.upload(thumb, thumbBlob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
+      if (up2.error) { await bucket.remove([path]); throw up2.error; }
+      return { path, thumb, w: w0, h: h0 };
     },
     async removeFiles(photos) {
-      const paths = photos.filter((p) => p.path).map((p) => p.path);
+      const paths = photos.flatMap((p) => [p.path, p.thumb]).filter(Boolean);
       if (paths.length) await sb.storage.from('gallery').remove(paths);
     }
   });
@@ -114,6 +128,7 @@
     },
     async remove(s) { this.write(this.read().filter((r) => r.id !== s.id)); },
     async upload(setId, file) {
+      if (file.size > MAX_BYTES) throw new Error(`File troppo grande (${mb(file.size)}, massimo 20 MB)`);
       const { canvas, w, h } = await resizeImage(file, DEMO_SIDE);
       return { src: canvas.toDataURL('image/jpeg', 0.78), w, h };
     },
@@ -122,7 +137,7 @@
 
   const errText = (e) => {
     const m = (e && e.message) || '';
-    if (/esaurito/.test(m)) return m;
+    if (/esaurito|troppo grande/.test(m)) return m;
     if (/fetch|network/i.test(m)) return 'Connessione assente: riprova';
     if (/row-level|policy|JWT|auth/i.test(m)) return 'Permesso negato: accedi di nuovo';
     if (/mime|size|too large/i.test(m)) return 'File non valido o troppo grande';
@@ -278,12 +293,16 @@
   });
 
   async function addFiles(files) {
-    const imgs = [...files].filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type));
-    if (!imgs.length) { toast('Scegli file JPG, PNG o WebP', true); return; }
+    const all = [...files].filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type));
+    if (!all.length) { toast('Scegli file JPG, PNG o WebP', true); return; }
+    const big = all.filter((f) => f.size > MAX_BYTES);
+    const imgs = all.filter((f) => f.size <= MAX_BYTES);
+    const tooBig = big.length ? `Scartate perché oltre 20 MB: ${big.map((f) => `${f.name} (${mb(f.size)})`).join(', ')}` : '';
+    if (!imgs.length) { progress.textContent = tooBig; return; }
     busy++;
     let done = 0, failed = 0;
-    progress.textContent = `Caricamento 0 / ${imgs.length}…`;
     for (const f of imgs) {
+      progress.textContent = `Caricamento ${done + 1} / ${imgs.length} — ${f.name} (${mb(f.size)})…`;
       try {
         const p = await store.upload(draft.id, f);
         p.alt = '';
@@ -296,10 +315,9 @@
         if (/esaurito/.test(e.message)) { progress.textContent = e.message; break; }
       }
       done++;
-      progress.textContent = `Caricamento ${done} / ${imgs.length}…`;
     }
     busy--;
-    progress.textContent = failed ? `${done - failed} caricate, ${failed} non riuscite` : `${done} foto aggiunte ★`;
+    progress.textContent = [failed ? `${done - failed} caricate, ${failed} non riuscite` : `${done} foto aggiunte ★`, tooBig].filter(Boolean).join(' · ');
   }
 
   $('#g-files').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });

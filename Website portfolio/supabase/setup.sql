@@ -119,8 +119,8 @@ create trigger gallery_sets_updated_at
 
 -- Spazio per le foto: lettura pubblica, caricamento e cancellazione solo dopo il login
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('gallery', 'gallery', true, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
-on conflict (id) do update set public = true;
+values ('gallery', 'gallery', true, 20971520, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit;
 
 drop policy if exists "gallery_files_select" on storage.objects;
 drop policy if exists "gallery_files_insert" on storage.objects;
