@@ -342,6 +342,42 @@
     });
   }
 
+  // Vai a una pagina del sito con la transizione a blocchi pixel (se attiva)
+  function goTo(href) {
+    if (!motion || !wipe) { location.href = href; return; }
+    store.set('ro-wipe', '1');
+    const sq = buildWipe();
+    gsap.fromTo(sq, { scale: 0 }, {
+      scale: 1.02, duration: .38, ease: 'power2.out', stagger: { each: .008, from: 'random' },
+      onComplete: () => { location.href = href; }
+    });
+  }
+
+  // Accesso nascosto all'area admin: tre clic rapidi sul logo REDORHEN in alto.
+  // Un clic singolo funziona come sempre (torna alla Home), con un breve ritardo
+  // per capire se arrivano altri clic.
+  (function secretAdmin() {
+    const brand = $('.site-header .brand');
+    if (!brand) return;
+    let clicks = 0, timer = null;
+    brand.style.touchAction = 'manipulation'; // evita lo zoom col doppio tocco su mobile
+    brand.addEventListener('click', (e) => {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      clicks++;
+      clearTimeout(timer);
+      if (clicks >= 3) {
+        clicks = 0;
+        location.href = 'admin.html';
+        return;
+      }
+      timer = setTimeout(() => {
+        clicks = 0;
+        if (page === 'home') scrollTo(0); else goTo(brand.href);
+      }, 380);
+    });
+  })();
+
   if (motion && wipe) {
     document.addEventListener('click', (e) => {
       const a = e.target.closest('a[href]');
@@ -352,12 +388,7 @@
       if (url.origin !== location.origin || !/\.html$/.test(url.pathname)) return;
       if (url.pathname === location.pathname && url.search === location.search) return;
       e.preventDefault();
-      store.set('ro-wipe', '1');
-      const sq = buildWipe();
-      gsap.fromTo(sq, { scale: 0 }, {
-        scale: 1.02, duration: .38, ease: 'power2.out', stagger: { each: .008, from: 'random' },
-        onComplete: () => { location.href = url.href; }
-      });
+      goTo(url.href);
     });
     window.addEventListener('pageshow', (e) => {
       if (e.persisted) { $$('i', wipe).forEach((i) => gsap.set(i, { scale: 0 })); store.del('ro-wipe'); }
