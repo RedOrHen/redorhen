@@ -405,8 +405,10 @@ main { display: block; }
   line-height: .95; text-transform: uppercase;
 }
 .pillar p { color: var(--dust); font-size: 17px; max-width: 40ch; }
-.pillar-photo { margin: 0; display: flex; justify-content: center; }
-.pillar-photo .px { width: 100%; max-width: calc(56vh * var(--ar, .8)); aspect-ratio: var(--ar, .8); }
+.pillar-photo { margin: 0; }
+/* la forma della cornice dipende solo dalle proporzioni della foto (Safari stirava la cornice nel contenitore flex) */
+.pillar-photo .px { width: 100%; max-width: calc(56vh * var(--ar, .8)); height: auto; min-height: 0; margin: 0 auto; aspect-ratio: var(--ar, .8); }
+.pillar-photo .px img { position: absolute; inset: 0; }
 .statbar { display: grid; gap: 8px; margin-top: 8px; }
 .statbar-segs { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
 .statbar-segs i { height: 12px; background: var(--ink-3); transition: background .1s; }
@@ -478,7 +480,8 @@ main { display: block; }
   .story-stage { display: none; }
   .chapter { min-height: 0; opacity: 1; padding: 0 0 72px; gap: 18px; }
   .chapter-photo { display: block; }
-  .chapter-photo .px { aspect-ratio: var(--ar, .8); }
+  .chapter-photo .px { height: auto; min-height: 0; aspect-ratio: var(--ar, .8); }
+  .chapter-photo .px img { position: absolute; inset: 0; }
 }
 
 /* ---------- Reel (filmstrip) ---------- */
