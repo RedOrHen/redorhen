@@ -531,23 +531,6 @@
     fillStory();
     fillPillars();
 
-    // Timecode da cinepresa
-    const tc = $('.timecode');
-    if (tc) {
-      const t0 = performance.now();
-      const pad = (n) => String(n).padStart(2, '0');
-      let last = -1;
-      const loop = (now) => {
-        const f = Math.floor((now - t0) / (1000 / 24));
-        if (f !== last) {
-          last = f;
-          tc.textContent = `${pad(Math.floor(f / 86400))}:${pad(Math.floor(f / 1440) % 60)}:${pad(Math.floor(f / 24) % 60)}:${pad(f % 24)}`;
-        }
-        requestAnimationFrame(loop);
-      };
-      if (motion) requestAnimationFrame(loop);
-    }
-
     // Countdown arcade nella CTA finale
     const cd = $('.countdown-n');
     if (cd && motion) {

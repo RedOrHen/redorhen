@@ -323,6 +323,8 @@ main { display: block; }
 .hero-title .line:last-child > span { color: var(--ember); }
 /* Su desktop il titolo sta tutto a sinistra della foto e si adatta allo spazio libero */
 @media (min-width: 901px) {
+  /* titolo centrato in verticale, alla stessa altezza del centro della foto */
+  .hero { justify-content: center; padding-top: calc(9vh + 72px); }
   .hero-content { container-type: inline-size; max-width: calc(100% - var(--ph) * var(--ar, .8) - 4vw - 40px); }
   .hero-title { font-size: clamp(38px, 11.4cqi, 190px); }
 }
