@@ -879,7 +879,7 @@ img, .px, .lb-media {
 .page-hero--photo > :not(.page-hero-photo) { grid-column: 1; }
 .page-hero-photo { grid-column: 2; grid-row: 1 / span 3; margin: 0; align-self: start; display: flex; justify-content: center; }
 /* la cornice ha le proporzioni della foto (--ar): la foto non viene mai tagliata */
-.page-hero-photo .px { width: 100%; max-width: calc(78vh * var(--ar, .8)); aspect-ratio: var(--ar, .8); }
+.page-hero-photo .px { width: 100%; max-width: calc(58vh * var(--ar, .8)); aspect-ratio: var(--ar, .8); }
 @media (max-width: 860px) {
   .page-hero--photo { grid-template-columns: 1fr; }
   .page-hero-photo { grid-column: 1; grid-row: auto; }
