@@ -28,8 +28,8 @@ Il concept visivo è "**Pixel → Fotogramma**": un sito cinematografico (titoli
 
 | Pagina | File | Contenuto |
 |---|---|---|
-| Home | `index.html` | Hero con foto in cornice da cinepresa, numeri, missione, tre pilastri, storia in tre capitoli, pellicola orizzontale con i set in evidenza, "quattro quest" dello shooting, invito finale, footer |
-| Lavori | `lavori.html` | Griglia dei set con filtri per categoria; clic su un set → visualizzatore a carosello |
+| Home | `index.html` | Hero con foto in cornice da cinepresa, numeri, missione, tre pilastri (ognuno con una foto dai set), storia in tre capitoli, pellicola orizzontale con i set in evidenza, "quattro quest" dello shooting, invito finale, footer |
+| Lavori | `lavori.html` | Griglia dei set con filtri per categoria (su telefono in una riga che scorre); clic su un set → visualizzatore a carosello |
 | Listino | `listino.html` | Tre pacchetti (Side Quest 50 €, Main Quest 150 €, Boss Fight da 60 €), extra, tempi di consegna, domande frequenti |
 | Contatti | `contatti.html` | Modulo di richiesta shooting (inviato con Formspree), link a email e Instagram |
 | Area admin | `admin.html` | Login, calendario appuntamenti, editor dei set della galleria (vedi §5) |

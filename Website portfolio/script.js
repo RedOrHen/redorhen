@@ -449,64 +449,6 @@
   }
 
   /* ---------------------------------------------------------------
-     Icone pixel
-     --------------------------------------------------------------- */
-  const ICONS = {
-    camera: [
-      '............',
-      '....####....',
-      '.##########.',
-      '.#........#.',
-      '.#..####..#.',
-      '.#.#oooo#.#.',
-      '.#.#oooo#.#.',
-      '.#..####..#.',
-      '.#........#.',
-      '.##########.',
-      '............',
-      '............'
-    ],
-    scene: [
-      '.........oo.',
-      '........oooo',
-      '.........oo.',
-      '............',
-      '....#.......',
-      '...###......',
-      '..#####..#..',
-      '.#######.##.',
-      '############',
-      '############',
-      '............',
-      '............'
-    ],
-    heart: [
-      '............',
-      '..##....##..',
-      '.####..####.',
-      '#####oo#####',
-      '############',
-      '############',
-      '.##########.',
-      '..########..',
-      '...######...',
-      '....####....',
-      '.....##.....',
-      '............'
-    ]
-  };
-  $$('[data-icon]').forEach((el) => {
-    const map = ICONS[el.dataset.icon];
-    if (!map) return;
-    let rects = '';
-    map.forEach((row, y) => [...row].forEach((ch, x) => {
-      if (ch === '#') rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="#FF6A1A"/>`;
-      if (ch === 'o') rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="#FFB547"/>`;
-    }));
-    el.innerHTML = `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
-  });
-
-  /* ---------------------------------------------------------------
      HOME
      --------------------------------------------------------------- */
   function buildReel() {
@@ -565,9 +507,29 @@
     });
   }
 
+  // Foto dei tre pilastri: prima i set non già mostrati nella storia o nella pellicola
+  function fillPillars() {
+    const imgs = $$('img[data-pillar]');
+    const real = WORKS.filter((w) => !w.placeholder);
+    if (!imgs.length || !real.length) return;
+    const shown = new Set($$('img[data-story], .reel-frame img').map((i) => i.getAttribute('src')));
+    const isShown = (w) => shown.has(w.photos[0].thumb || w.photos[0].src);
+    const pool = real.filter((w) => !isShown(w)).concat(real.filter(isShown));
+    imgs.forEach((img, i) => {
+      const w = pool[i % pool.length];
+      const p = w.photos[0];
+      img.src = p.thumb || p.src;
+      img.width = p.w; img.height = p.h;
+      img.alt = p.alt || `${w.character}${w.series ? ' — ' + w.series : ''}`;
+      const fig = img.closest('figure');
+      if (fig) fig.style.setProperty('--ar', String(p.w / p.h));
+    });
+  }
+
   function home() {
     buildReel();
     fillStory();
+    fillPillars();
 
     // Timecode da cinepresa
     const tc = $('.timecode');
