@@ -594,7 +594,7 @@ main { display: block; }
 /* ---------- Inner pages ---------- */
 
 .page-hero {
-  padding: calc(var(--header-h) + clamp(80px, 16vh, 180px)) var(--gutter) clamp(56px, 9vh, 100px);
+  padding: calc(var(--header-h) + clamp(24px, 6vh, 64px)) var(--gutter) clamp(48px, 8vh, 96px);
   display: grid; gap: 28px;
 }
 .page-hero .title { font-size: clamp(64px, 13vw, 230px); }
@@ -875,9 +875,9 @@ img, .px, .lb-media {
 
 /* ---------- Foto grande nelle pagine interne ---------- */
 
-.page-hero--photo { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: clamp(24px, 5vw, 80px); align-items: end; }
+.page-hero--photo { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: clamp(24px, 5vw, 80px); align-items: start; align-content: start; }
 .page-hero--photo > :not(.page-hero-photo) { grid-column: 1; }
-.page-hero-photo { grid-column: 2; grid-row: 1 / span 3; margin: 0; align-self: center; display: flex; justify-content: center; }
+.page-hero-photo { grid-column: 2; grid-row: 1 / span 3; margin: 0; align-self: start; display: flex; justify-content: center; }
 /* la cornice ha le proporzioni della foto (--ar): la foto non viene mai tagliata */
 .page-hero-photo .px { width: 100%; max-width: calc(78vh * var(--ar, .8)); aspect-ratio: var(--ar, .8); }
 @media (max-width: 860px) {
