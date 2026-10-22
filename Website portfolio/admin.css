@@ -348,3 +348,5 @@ body.admin::after { display: none; }
 }
 .g-flagbar button:hover { color: var(--cream); }
 .g-flagbar button[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
+.g-note { color: var(--dust); font-size: 14px; line-height: 1.5; }
+.g-note b { color: var(--cream); }

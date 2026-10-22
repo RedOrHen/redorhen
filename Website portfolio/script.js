@@ -61,7 +61,7 @@
     : `${DB.supabaseUrl}/storage/v1/object/public/gallery/${String(path).split('/').map(encodeURIComponent).join('/')}`);
   const rowToWork = (r) => ({
     character: r.character || '', series: r.series || '', category: r.category || '',
-    cosplayer: r.cosplayer || '', featured: !!r.featured,
+    cosplayer: r.cosplayer || '', featured: !!r.featured, published: r.published !== false,
     // src = originale in piena qualità; thumb = anteprima leggera per griglia e miniature
     photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), thumb: p.thumb ? publicUrl(p.thumb) : undefined, w: p.w, h: p.h, alt: p.alt, hero: !!p.hero, contact: !!p.contact }))
   });
@@ -72,7 +72,7 @@
       try {
         const d = JSON.parse(localStorage.getItem(GALLERY_DEMO_KEY));
         if (Array.isArray(d) && d.length) {
-          const sets = d.filter((x) => x.published !== false).map(rowToWork).filter((w) => w.photos.length);
+          const sets = d.map(rowToWork).filter((w) => w.photos.length);
           if (sets.length) return sets;
         }
       } catch (e) { /* nessuna anteprima */ }
@@ -83,7 +83,7 @@
     try {
       const headers = { apikey: DB.supabaseAnonKey };
       if (DB.supabaseAnonKey.startsWith('eyJ')) headers.Authorization = `Bearer ${DB.supabaseAnonKey}`;
-      const res = await fetch(`${DB.supabaseUrl}/rest/v1/gallery_sets?select=character,series,category,cosplayer,featured,photos&published=eq.true&order=position.asc,created_at.asc`, { headers, signal: ctrl.signal });
+      const res = await fetch(`${DB.supabaseUrl}/rest/v1/gallery_sets?select=character,series,category,cosplayer,featured,published,photos&order=position.asc,created_at.asc`, { headers, signal: ctrl.signal });
       if (!res.ok) return null;
       const sets = (await res.json()).map(rowToWork).filter((w) => w.photos.length);
       return sets.length ? sets : null;
@@ -1140,7 +1140,10 @@
   (async () => {
   if (page === 'home' || page === 'lavori') {
     const remote = await remoteP;
-    if (remote) WORKS = remote;
+    // Nella galleria e nella pellicola solo i set pubblicati; i set non pubblicati arrivano
+    // solo se contengono la foto scelta come Hero o Contatti (servono a chosenPhoto)
+    const published = (remote || []).filter((w) => w.published);
+    if (published.length) WORKS = published;
   }
   normalizeWorks();
 

@@ -86,7 +86,7 @@ create table if not exists public.gallery_sets (
 
 create index if not exists gallery_sets_position_idx on public.gallery_sets (position);
 
--- Chiunque può LEGGERE i set pubblicati (servono al sito pubblico);
+-- Chiunque può LEGGERE i set pubblicati (servono al sito pubblico) e quelli con la foto Hero/Contatti;
 -- solo tu, dopo il login, puoi crearli, modificarli ed eliminarli.
 alter table public.gallery_sets enable row level security;
 
@@ -95,9 +95,16 @@ drop policy if exists "gallery_sets_insert_own" on public.gallery_sets;
 drop policy if exists "gallery_sets_update_own" on public.gallery_sets;
 drop policy if exists "gallery_sets_delete_own" on public.gallery_sets;
 
+-- Si leggono anche i set non pubblicati che contengono la foto scelta come Hero o Contatti:
+-- non compaiono nei Lavori, ma il sito deve poter mostrare quella foto.
 create policy "gallery_sets_read" on public.gallery_sets
   for select to anon, authenticated
-  using (published or (select auth.uid()) = user_id);
+  using (
+    published
+    or photos @> '[{"hero": true}]'::jsonb
+    or photos @> '[{"contact": true}]'::jsonb
+    or (select auth.uid()) = user_id
+  );
 
 create policy "gallery_sets_insert_own" on public.gallery_sets
   for insert to authenticated with check ((select auth.uid()) = user_id);

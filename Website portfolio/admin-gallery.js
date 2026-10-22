@@ -199,7 +199,12 @@
     }
     list.innerHTML = sets.map((s, i) => {
       const cover = s.photos[0];
-      const flags = [s.photos.some((p) => p.hero) && 'Hero', s.photos.some((p) => p.contact) && 'Contatti', s.featured && '★ Home', s.published === false && 'Bozza'].filter(Boolean);
+      const hero = s.photos.some((p) => p.hero), contact = s.photos.some((p) => p.contact);
+      // Non pubblicato: non compare nei Lavori; se ha la foto Hero/Contatti quella si vede comunque
+      const draft = s.published === false;
+      const flags = draft
+        ? [hero || contact ? 'Solo ' + [hero && 'Hero', contact && 'Contatti'].filter(Boolean).join(' e ') : 'Bozza']
+        : [hero && 'Hero', contact && 'Contatti', s.featured && '★ Home'].filter(Boolean);
       return `<article class="g-card${s.published === false ? ' is-draft' : ''}" data-id="${esc(s.id)}">
         <button class="g-cover" type="button" data-act="edit" aria-label="Modifica ${esc(s.character)}">
           ${cover ? `<img src="${esc(publicUrl(cover))}" alt="" loading="lazy" decoding="async">` : '<span class="g-nophoto pixel">Nessuna foto</span>'}

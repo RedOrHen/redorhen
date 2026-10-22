@@ -150,9 +150,11 @@ Il browser resta collegato finché non si preme **Esci**.
   - per ogni foto viene generata anche l'anteprima da 1600 px.
 - Sotto ogni foto: ◀ ▶ ordine, ★ copertina (la prima foto è la copertina), ✕ togli,
   e gli interruttori **Hero** / **Contatti**: una sola foto per ciascuno in tutto il sito; scegliendone un'altra,
-  quella di prima perde l'impostazione automaticamente (anche se sta in un altro set). La foto deve essere in un set pubblicato.
+  quella di prima perde l'impostazione automaticamente (anche se sta in un altro set).
+  La foto può stare anche in un set **non pubblicato**: il set non compare nei Lavori (etichetta "Solo Hero" / "Solo Contatti"),
+  ma la foto scelta viene mostrata lo stesso nella Home o nella pagina Contatti.
 - Nella lista: ▲ ▼ ordine dei set, **Modifica**, ✕ elimina (cancella anche le foto da Supabase).
-  Le etichette sulla copertina indicano Hero, Contatti, ★ Home e Bozza.
+  Le etichette sulla copertina indicano Hero, Contatti, ★ Home, Bozza, oppure "Solo Hero" / "Solo Contatti" per i set non pubblicati usati solo per quelle foto.
 - **Importa da works.js**: copia su Supabase i set con foto vere presenti in `works.js`.
 - **Vedi la pagina ↗** apre la pagina Lavori.
 
@@ -196,7 +198,7 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
 | Risorsa | Contenuto | Chi può leggere | Chi può scrivere |
 |---|---|---|---|
 | tabella `appointments` | appuntamenti del calendario | solo il proprietario, dopo il login | solo il proprietario |
-| tabella `gallery_sets` | set della galleria (testi, ordine, elenco foto, scelte Hero/Contatti) | tutti i set pubblicati; le bozze solo il proprietario | solo il proprietario |
+| tabella `gallery_sets` | set della galleria (testi, ordine, elenco foto, scelte Hero/Contatti) | i set pubblicati e quelli con la foto Hero/Contatti; le altre bozze solo il proprietario | solo il proprietario |
 | spazio file `gallery` | foto originali e anteprime | tutti (servono al sito) | solo il proprietario |
 
 - La chiave in `admin-config.js` è quella **publishable/anon**, fatta per stare nel codice pubblico: la sicurezza
