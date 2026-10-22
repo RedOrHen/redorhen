@@ -13,10 +13,12 @@
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   }));
-  const MAX_BYTES = 20 * 1024 * 1024; // peso massimo di una foto originale
+  // Online si tiene solo una versione a 4000 px sul lato lungo: nitida anche su un monitor 4K,
+  // ma non l'originale da stampa (chi la scarica dal browser non ha la foto piena)
+  const MAX_SIDE = 4000;
+  const QUALITY = 0.9;       // qualità JPEG della versione online
   const THUMB_SIDE = 1600;   // lato lungo dell'anteprima per griglia e miniature
   const DEMO_SIDE = 1200;    // in demo le foto stanno nel browser: più piccole
-  const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
   const mb = (n) => `${(n / 1048576).toFixed(1).replace('.', ',')} MB`;
   const DEMO_KEY = 'ro-gallery-demo';
 
@@ -51,31 +53,38 @@
   }
   const toBlob = (canvas, q = 0.86) => new Promise((res) => canvas.toBlob(res, 'image/jpeg', q));
 
-  // Foto oltre 20 MB: si ricomprime alla risoluzione piena con la qualità JPEG più alta
-  // che sta sotto il limite (95% → 85%); solo se non basta si riducono un po' le dimensioni.
-  async function fitUnderLimit(file) {
-    const { canvas: full, w0, h0 } = await resizeImage(file, Infinity);
-    for (let scale = 1; scale >= 0.5; scale = Math.round(scale * 0.9 * 1000) / 1000) {
-      let src = full;
-      if (scale < 1) {
-        src = document.createElement('canvas');
-        src.width = Math.round(w0 * scale);
-        src.height = Math.round(h0 * scale);
-        const ctx = src.getContext('2d');
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(full, 0, 0, src.width, src.height);
-      }
-      for (const q of [0.95, 0.93, 0.91, 0.89, 0.87, 0.85]) {
-        const blob = await toBlob(src, q);
-        if (blob && blob.size <= MAX_BYTES) return { blob, w: src.width, h: src.height, q, scale };
-      }
-    }
-    throw new Error('Impossibile ridurre la foto sotto i 20 MB');
+  // Riduce un canvas già pronto (per l'anteprima si parte dalla versione a 4000 px, più veloce)
+  function shrinkCanvas(src, max) {
+    const s = Math.min(1, max / Math.max(src.width, src.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(src.width * s); c.height = Math.round(src.height * s);
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  }
+
+  // Versione online di una foto: al massimo 4000 px sul lato lungo, JPEG al 90%.
+  // Si ricodifica sempre: così spariscono anche i metadati (posizione GPS, dati della fotocamera).
+  async function webVersion(file) {
+    const r = await resizeImage(file, MAX_SIDE);
+    const blob = await toBlob(r.canvas, QUALITY);
+    if (!blob) throw new Error('Impossibile leggere la foto');
+    return { blob, canvas: r.canvas, w: r.w, h: r.h, w0: r.w0, h0: r.h0 };
   }
 
   const fileUrl = (path) => `${CFG.supabaseUrl}/storage/v1/object/public/gallery/${String(path).split('/').map(encodeURIComponent).join('/')}`;
   // Nell'admin si mostra l'anteprima leggera (l'originale resta per il visualizzatore del sito)
   const publicUrl = (p) => p.src || fileUrl(p.thumb || p.path);
+
+  // Barra di avanzamento (valore da 0 a 1; null = nascosta)
+  function showBar(el, v) {
+    if (!el) return;
+    el.hidden = v == null;
+    if (v == null) return;
+    el.querySelector('i').style.transform = `scaleX(${Math.min(1, Math.max(0, v))})`;
+    el.setAttribute('aria-valuenow', String(Math.round(v * 100)));
+  }
 
   /* ---------- Storage ---------- */
   const cleanRow = (s) => ({
@@ -105,28 +114,60 @@
       if (error) throw error;
       await this.removeFiles(s.photos);
     },
-    // L'originale viene caricato così com'è (nessuna ricompressione: qualità intatta);
-    // in più si genera un'anteprima leggera per griglia, miniature e pellicola della Home.
-    async upload(setId, file, onStep) {
-      const { canvas, w0, h0 } = await resizeImage(file, THUMB_SIDE);
-      const thumbBlob = await toBlob(canvas, 0.85);
-      let body = file, type = EXT[file.type] ? file.type : 'image/jpeg', w = w0, h = h0, reduced = null;
-      if (file.size > MAX_BYTES) {
-        onStep?.('riduco');
-        const r = await fitUnderLimit(file);
-        body = r.blob; type = 'image/jpeg'; w = r.w; h = r.h;
-        reduced = { from: file.size, to: r.blob.size, q: r.q, scale: r.scale };
-      }
-      onStep?.('carico');
+    // Caricamento con avanzamento: supabase-js non segnala i byte inviati, quindi si usa
+    // direttamente l'API dello storage con XMLHttpRequest
+    async put(path, blob, onPct) {
+      const { data } = await sb.auth.getSession();
+      const token = data?.session?.access_token;
+      if (!token) throw new Error('auth: sessione scaduta');
+      const url = `${CFG.supabaseUrl}/storage/v1/object/gallery/${path.split('/').map(encodeURIComponent).join('/')}`;
+      await new Promise((res, rej) => {
+        const x = new XMLHttpRequest();
+        x.open('POST', url);
+        x.setRequestHeader('Authorization', `Bearer ${token}`);
+        x.setRequestHeader('apikey', CFG.supabaseAnonKey);
+        x.setRequestHeader('Content-Type', blob.type || 'image/jpeg');
+        x.setRequestHeader('Cache-Control', 'max-age=31536000');
+        x.setRequestHeader('x-upsert', 'false');
+        x.upload.onprogress = (e) => { if (e.lengthComputable) onPct?.(e.loaded / e.total); };
+        x.onload = () => {
+          if (x.status >= 200 && x.status < 300) { onPct?.(1); res(); return; }
+          let m = `HTTP ${x.status}`;
+          try { m = JSON.parse(x.responseText).message || m; } catch (e) { /* risposta non JSON */ }
+          rej(new Error(m));
+        };
+        x.onerror = () => rej(new Error('network'));
+        x.send(blob);
+      });
+    },
+    // Si salvano solo la versione a 4000 px e un'anteprima leggera per griglia, miniature e pellicola.
+    // onProgress riceve un valore da 0 a 1: preparazione 0–15%, foto 15–90%, anteprima 90–100%.
+    async upload(setId, file, onProgress) {
+      onProgress?.(0.02);
+      const web = await webVersion(file);
+      const thumbBlob = await toBlob(shrinkCanvas(web.canvas, THUMB_SIDE), 0.85);
+      onProgress?.(0.15);
       const base = `${setId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const path = `${base}.${EXT[type]}`;
+      const path = `${base}.jpg`;
       const thumb = `${base}-anteprima.jpg`;
-      const bucket = sb.storage.from('gallery');
-      const up1 = await bucket.upload(path, body, { contentType: type, cacheControl: '31536000', upsert: false });
-      if (up1.error) throw up1.error;
-      const up2 = await bucket.upload(thumb, thumbBlob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
-      if (up2.error) { await bucket.remove([path]); throw up2.error; }
-      return { path, thumb, w, h, reduced };
+      await this.put(path, web.blob, (p) => onProgress?.(0.15 + p * 0.75));
+      try {
+        await this.put(thumb, thumbBlob, (p) => onProgress?.(0.9 + p * 0.1));
+      } catch (e) { await sb.storage.from('gallery').remove([path]); throw e; }
+      return { path, thumb, w: web.w, h: web.h };
+    },
+    // Crea la versione a 4000 px di una foto già online (il file vecchio si cancella dopo il salvataggio)
+    async shrinkExisting(photo, onProgress) {
+      onProgress?.(0.02);
+      const res = await fetch(fileUrl(photo.path), { cache: 'no-store' });
+      if (!res.ok) throw new Error(`download ${res.status}`);
+      const raw = await res.blob();
+      onProgress?.(0.4);
+      const web = await webVersion(new Blob([raw], { type: raw.type || 'image/jpeg' }));
+      onProgress?.(0.5);
+      const path = `${photo.path.replace(/\.[a-z0-9]+$/i, '')}-4000.jpg`;
+      await this.put(path, web.blob, (p) => onProgress?.(0.5 + p * 0.5));
+      return { ...photo, path, w: web.w, h: web.h };
     },
     async removeFiles(photos) {
       const paths = photos.flatMap((p) => [p.path, p.thumb]).filter(Boolean);
@@ -155,8 +196,9 @@
       if (r) { r.position = position; this.write(rows); }
     },
     async remove(s) { this.write(this.read().filter((r) => r.id !== s.id)); },
-    async upload(setId, file) {
+    async upload(setId, file, onProgress) {
       const { canvas, w, h } = await resizeImage(file, DEMO_SIDE);
+      onProgress?.(1);
       return { src: canvas.toDataURL('image/jpeg', 0.78), w, h };
     },
     async removeFiles() {}
@@ -164,10 +206,10 @@
 
   const errText = (e) => {
     const m = (e && e.message) || '';
-    if (/esaurito|Impossibile ridurre/.test(m)) return m;
+    if (/esaurito|Impossibile leggere/.test(m)) return m;
     if (/maximum allowed size|exceeded/i.test(m)) return 'Supabase rifiuta il file: il limite del contenitore "gallery" è più basso di 20 MB (vedi supabase/LEGGIMI.md)';
     if (/fetch|network/i.test(m)) return 'Connessione assente: riprova';
-    if (/row-level|policy|JWT|auth/i.test(m)) return 'Permesso negato: accedi di nuovo';
+    if (/row-level|policy|JWT|JWS|auth/i.test(m)) return 'Permesso negato: accedi di nuovo';
     if (/mime|size|too large/i.test(m)) return 'File non valido o troppo grande';
     return 'Operazione non riuscita';
   };
@@ -185,6 +227,7 @@
       toast(errText(e), true);
     } finally { list.classList.remove('loading'); }
     render();
+    updateShrinkButton();
   }
 
   function render() {
@@ -268,6 +311,7 @@
   const F = form.elements;
   const photosEl = $('#g-photos');
   const progress = $('.g-progress', form);
+  const bar = $('#g-bar');
   let draft = null;        // set in modifica
   let uploaded = [];       // foto caricate in questa sessione dell'editor
   let removed = [];        // foto esistenti tolte (da cancellare al salvataggio)
@@ -342,19 +386,16 @@
     const imgs = all;
     busy++;
     let done = 0, failed = 0, lastErr = '';
-    const notes = [];
     for (const f of imgs) {
-      const label = `${done + 1} / ${imgs.length} — ${f.name} (${mb(f.size)})`;
-      progress.textContent = `Caricamento ${label}…`;
+      const label = `foto ${done + 1} di ${imgs.length} (${f.name}, ${mb(f.size)})`;
+      const step = (p) => {
+        const total = (done + p) / imgs.length;
+        showBar(bar, total);
+        progress.textContent = `Caricamento ${Math.round(total * 100)}% · ${label}`;
+      };
+      step(0);
       try {
-        const p = await store.upload(draft.id, f, (step) => {
-          progress.textContent = step === 'riduco' ? `Riduco sotto i 20 MB ${label}…` : `Caricamento ${label}…`;
-        });
-        if (p.reduced) {
-          const r = p.reduced;
-          notes.push(`${f.name}: ${mb(r.from)} → ${mb(r.to)} (qualità ${Math.round(r.q * 100)}%${r.scale < 1 ? `, dimensioni ${Math.round(r.scale * 100)}%` : ', risoluzione piena'})`);
-        }
-        delete p.reduced;
+        const p = await store.upload(draft.id, f, step);
         p.alt = '';
         draft.photos.push(p);
         uploaded.push(p);
@@ -368,10 +409,8 @@
       done++;
     }
     busy--;
-    progress.textContent = [
-      failed ? `${done - failed} caricate, ${failed} non riuscite: ${lastErr}` : `${done} foto aggiunte ★`,
-      notes.length ? `Ridotte: ${notes.join(' · ')}` : ''
-    ].filter(Boolean).join(' · ');
+    showBar(bar, null);
+    progress.textContent = failed ? `${done - failed} caricate, ${failed} non riuscite: ${lastErr}` : `Caricamento 100% · ${done} foto aggiunte ★`;
   }
 
   $('#g-files').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
@@ -471,6 +510,62 @@
     } finally {
       btn.disabled = false;
       btn.textContent = 'Importa da works.js';
+      load();
+    }
+  });
+
+  /* ---------- Foto già online: versione a 4000 px al posto degli originali ---------- */
+  const big = (p) => p.path && Math.max(p.w || 0, p.h || 0) > MAX_SIDE;
+  function updateShrinkButton() {
+    const btn = $('#g-shrink');
+    if (!btn) return;
+    const n = sets.reduce((k, s) => k + s.photos.filter(big).length, 0);
+    btn.hidden = !n || !store?.shrinkExisting;
+    btn.textContent = `Riduci ${n} foto a 4000 px`;
+  }
+
+  $('#g-shrink')?.addEventListener('click', async () => {
+    const todo = sets.map((s) => ({ s, photos: s.photos.filter(big) })).filter((t) => t.photos.length);
+    const n = todo.reduce((k, t) => k + t.photos.length, 0);
+    if (!n) return;
+    if (!confirm(`Creo la versione a 4000 px di ${n} foto e CANCELLO DEFINITIVAMENTE da Supabase i loro originali in alta risoluzione. Le anteprime restano. Gli originali sul tuo computer non vengono toccati. Procedo?`)) return;
+    const btn = $('#g-shrink');
+    const out = $('#g-batch');
+    const bbar = $('#g-batch-bar');
+    btn.disabled = true;
+    let done = 0, failed = 0;
+    try {
+      for (const t of todo) {
+        const old = [];
+        const photos = [...t.s.photos];
+        for (const p of t.photos) {
+          const step = (x) => {
+            const total = (done + x) / n;
+            showBar(bbar, total);
+            out.textContent = `Riduzione ${Math.round(total * 100)}% · foto ${done + 1} di ${n} (${t.s.character})`;
+          };
+          step(0);
+          try {
+            const np = await store.shrinkExisting(p, step);
+            photos[photos.indexOf(p)] = np;
+            old.push(p.path);
+          } catch (e) { console.warn(e); failed++; }
+          done++;
+        }
+        if (!old.length) continue;
+        // prima si salva il set con i file nuovi, poi si cancellano gli originali
+        await store.save({ ...t.s, photos });
+        await store.removeFiles(old.map((path) => ({ path })));
+      }
+      out.textContent = failed ? `Fatto: ${n - failed} foto ridotte, ${failed} non riuscite (riprova)` : `Fatto: ${n} foto ridotte a 4000 px, originali cancellati ★`;
+      toast(failed ? 'Riduzione completata con qualche errore' : 'Foto ridotte a 4000 px ★', !!failed);
+    } catch (e) {
+      console.warn(e);
+      out.textContent = errText(e);
+      toast(errText(e), true);
+    } finally {
+      showBar(bbar, null);
+      btn.disabled = false;
       load();
     }
   });

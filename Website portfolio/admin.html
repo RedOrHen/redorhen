@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=20261022r">
-  <link rel="stylesheet" href="admin.css?v=20261022r">
+  <link rel="stylesheet" href="style.css?v=20261022s">
+  <link rel="stylesheet" href="admin.css?v=20261022s">
 </head>
 <body class="admin">
 
@@ -57,11 +57,14 @@
         <h1 class="cal-title">Lavori</h1>
         <div class="cal-actions">
           <a class="btn-sm" id="g-preview" href="lavori.html" target="_blank" rel="noopener">Vedi la pagina ↗</a>
+          <button class="btn-sm" type="button" id="g-shrink" hidden>Riduci le foto a 4000 px</button>
           <button class="btn-sm" type="button" id="g-import">Importa da works.js</button>
           <button class="btn" type="button" id="g-new">+ Nuovo set</button>
         </div>
       </div>
       <p class="g-hint">Ogni set è un riquadro della pagina Lavori; la prima foto è la copertina. Usa ▲ ▼ per cambiare l'ordine. Finché non c'è almeno un set pubblicato con foto, il sito mostra i lavori di works.js.</p>
+      <p class="g-progress pixel" id="g-batch" aria-live="polite"></p>
+      <div class="g-bar" id="g-batch-bar" role="progressbar" aria-label="Riduzione delle foto" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
       <div class="g-list" id="g-list"></div>
     </section>
 
@@ -250,9 +253,10 @@
           <label class="g-drop" id="g-drop">
             <input type="file" accept="image/jpeg,image/png,image/webp" multiple id="g-files">
             <b>Trascina qui le foto</b> o clicca per sceglierle
-            <small>JPG, PNG o WebP · qualità originale fino a 20 MB · oltre li riduco perdendo il minimo</small>
+            <small>JPG, PNG o WebP di qualsiasi peso · online salvo una versione a 4000 px sul lato lungo (nitida anche su un monitor 4K), non l'originale</small>
           </label>
           <p class="g-progress pixel" aria-live="polite"></p>
+          <div class="g-bar" id="g-bar" role="progressbar" aria-label="Caricamento delle foto" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
           <div class="g-photos" id="g-photos"></div>
         </div>
       </div>
@@ -325,11 +329,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/data/admin-config.js?v=20261022r"></script>
+  <script src="assets/data/admin-config.js?v=20261022s"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="assets/data/works.js?v=20261022r"></script>
-  <script src="admin.js?v=20261022r"></script>
-  <script src="admin-gallery.js?v=20261022r"></script>
-  <script src="admin-promo.js?v=20261022r"></script>
+  <script src="assets/data/works.js?v=20261022s"></script>
+  <script src="admin.js?v=20261022s"></script>
+  <script src="admin-gallery.js?v=20261022s"></script>
+  <script src="admin-promo.js?v=20261022s"></script>
 </body>
 </html>

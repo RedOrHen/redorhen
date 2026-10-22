@@ -61,9 +61,9 @@ e visibili da qualsiasi dispositivo, segui questi passi (circa 10 minuti).
   della galleria (servono al sito); gli appuntamenti e i set in bozza restano invisibili.
 - Appuntamenti e set creati in modalità demo restano nel browser e non vengono copiati su Supabase.
   In demo puoi vedere l'anteprima della galleria su `lavori.html?demo`.
-- Le foto vengono caricate **originali, senza ricompressione** (massimo 20 MB l'una); in più il sito
-  genera un'anteprima leggera per la griglia. Il piano gratuito include 1 GB di spazio: con foto da
-  5–20 MB sono circa 50–200 foto. Se ti serve più spazio, il piano Pro di Supabase ne include 100 GB.
+- Le foto vengono caricate in una **versione a 4000 px** sul lato lungo (circa 2–5 MB l'una, senza metadati),
+  più un'anteprima leggera per la griglia; gli originali restano solo sul tuo computer. Il piano gratuito
+  include 1 GB di spazio: sono circa 200–400 foto. Se ti serve più spazio, il piano Pro di Supabase ne include 100 GB.
 - Sul piano gratuito Supabase mette in pausa i progetti che non ricevono richieste per circa una
   settimana: se succede, riattivalo dalla dashboard con **Restore project**.
 - Password dimenticata: cambiala da **Authentication** → **Users** → il tuo utente.

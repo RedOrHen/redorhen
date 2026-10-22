@@ -40,7 +40,7 @@ oppure con **tre clic rapidi sul logo REDORHEN** in alto in qualunque pagina pub
 
 ### Il visualizzatore delle foto (pagina Lavori)
 
-- Mostra subito l'anteprima leggera e poi la sostituisce con l'**originale in piena qualità** ("HD…" in un angolo mentre carica).
+- Mostra subito l'anteprima leggera e poi la sostituisce con la **versione a 4000 px** ("HD…" in un angolo mentre carica).
 - **Zoom**: rotella o doppio clic con il mouse; pizzico o doppio tocco con le dita. Fino a 12×.
   Da ingrandita la foto **esce dalla cornice e riempie tutto lo schermo**, si sposta trascinandola fino ai suoi bordi
   e **tutti i comandi spariscono**. Si torna alla dimensione normale con doppio clic/tocco, pizzico, tasto `0` o `Esc`.
@@ -52,7 +52,8 @@ oppure con **tre clic rapidi sul logo REDORHEN** in alto in qualunque pagina pub
 
 Sulle foto sono bloccati clic destro ("Salva immagine"), trascinamento e pressione lunga su telefono; al loro posto
 compare "© RedOrHen — foto protette". È un deterrente: con gli strumenti del browser o uno screenshot una foto si può
-comunque copiare.
+comunque copiare. Per questo online c'è solo una versione a **4000 px** sul lato lungo, senza metadati (niente GPS
+né dati della fotocamera): nitida su qualsiasi schermo, anche 4K, ma non l'originale da stampa, che resta solo sul tuo computer.
 
 ---
 
@@ -107,7 +108,8 @@ Restano solo sul computer e **non** vanno su GitHub (vedi `.gitignore`): `Media/
    modalità demo e salvati solo in quel browser.
 
 Ogni foto su Supabase ha due file nella cartella del suo set:
-`<id>.jpg` (originale, o ridotto sotto 20 MB) e `<id>-anteprima.jpg` (1600 px, per griglia, miniature e pellicola).
+`<id>.jpg` (versione a 4000 px sul lato lungo, JPEG al 90%) e `<id>-anteprima.jpg` (1600 px, per griglia, miniature e pellicola).
+Gli originali in alta risoluzione non vengono caricati.
 
 ### Foto della Home e della pagina Contatti
 
@@ -147,10 +149,12 @@ Il browser resta collegato finché non si preme **Esci**.
 - **+ Nuovo set**: personaggio, serie, categoria (diventa il filtro della pagina Lavori), cosplayer, pubblicato/bozza,
   "mostra nella pellicola della Home".
 - **Foto**: si trascinano nel riquadro o si scelgono dal computer (JPG, PNG, WebP).
-  - fino a **20 MB**: caricate **intatte**;
-  - oltre 20 MB: ricompresse a **risoluzione piena** con la qualità JPEG più alta sotto il limite (95% → 85%);
-    solo se non basta si riducono un po' le dimensioni. L'editor dice di quanto ha ridotto ogni foto.
-  - per ogni foto viene generata anche l'anteprima da 1600 px.
+  - di qualsiasi peso: il browser le riduce a **4000 px** sul lato lungo (le più piccole restano come sono) e le salva
+    in JPEG al 90%, togliendo i metadati; poi crea l'anteprima da 1600 px. Su Supabase non finisce mai l'originale.
+  - durante il caricamento una barra e la **percentuale** mostrano l'avanzamento di tutte le foto scelte.
+- **Riduci N foto a 4000 px** (compare solo se servono): converte le foto caricate prima di questa regola e
+  **cancella definitivamente** da Supabase i loro originali in alta risoluzione, con barra e percentuale.
+  Prima salva il set con i file nuovi, poi cancella i vecchi. Le foto originali sul computer non vengono toccate.
 - Sotto ogni foto: ◀ ▶ ordine, ★ copertina (la prima foto è la copertina), ✕ togli,
   e gli interruttori **Hero** / **Contatti**: una sola foto per ciascuno in tutto il sito; scegliendone un'altra,
   quella di prima perde l'impostazione automaticamente (anche se sta in un altro set).
@@ -228,11 +232,11 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
 | tabella `gallery_sets` | set della galleria (testi, ordine, elenco foto, scelte Hero/Contatti) | i set pubblicati e quelli con la foto Hero/Contatti; le altre bozze solo il proprietario | solo il proprietario |
 | tabella `price_items` | prezzi di pacchetti ed extra del Listino | tutti (servono al sito) | solo il proprietario |
 | tabella `promotions` | sconti a tempo del Listino | gli sconti attivi nel periodo; tutti solo il proprietario | solo il proprietario |
-| spazio file `gallery` | foto originali e anteprime | tutti (servono al sito) | solo il proprietario |
+| spazio file `gallery` | foto a 4000 px e anteprime | tutti (servono al sito) | solo il proprietario |
 
 - La chiave in `admin-config.js` è quella **publishable/anon**, fatta per stare nel codice pubblico: la sicurezza
   è data dalle regole del database. **Mai** usare la chiave `secret` / `service_role` nel sito.
-- Limite per file: 20 MB. Spazio del piano gratuito: 1 GB in tutto (Project Settings → Usage).
+- Limite per file: 20 MB (una foto a 4000 px pesa circa 2–5 MB). Spazio del piano gratuito: 1 GB in tutto (Project Settings → Usage).
 - Il piano gratuito mette in pausa il progetto dopo circa una settimana senza visite: riattivarlo da **Restore project**.
   Nel frattempo la pagina Lavori mostra i set di riserva di `works.js`.
 
@@ -245,7 +249,7 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
 - Titolo e foto della Home sono visibili entro il primo secondo; non c'è schermata di caricamento.
 - Tutti i comandi sono raggiungibili da tastiera; il visualizzatore tiene il focus al suo interno; campi obbligatori segnalati con `*`.
 - Pulsanti e comandi touch alti almeno 44 px; testi non sotto i 13 px.
-- La griglia e la pellicola usano le anteprime leggere; gli originali si scaricano solo nel visualizzatore.
+- La griglia e la pellicola usano le anteprime leggere; le versioni a 4000 px si scaricano solo nel visualizzatore.
 
 ---
 
@@ -275,4 +279,5 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
   - Visualizzatore più grande; zoom a tutto schermo su telefono e desktop; comandi nascosti da ingrandita.
   - Scelta della foto della Home e della pagina Contatti dall'area admin (interruttori Hero / Contatti).
   - Seconda revisione: pilastri della Home con foto, filtri di Lavori in una riga su telefono, meno spazi vuoti.
+  - Online solo foto a 4000 px senza metadati (originali da 20 MB cancellati); percentuale di caricamento nell'editor.
   - Extra del Listino aggiornati; prezzi e sconti a tempo modificabili dall'area admin (scheda Listino).
