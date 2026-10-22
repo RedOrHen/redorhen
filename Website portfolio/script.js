@@ -794,7 +794,12 @@
       let pinch = null, pan = null, lastTap = 0, lastTapX = 0, lastTapY = 0, lastTouch = 0;
       const ptrs = new Map();
       // Telefono: da ingrandita la foto può uscire dalla cornice e riempire tutto lo schermo
-      const free = () => innerWidth <= 700;
+      const touchDevice = matchMedia('(hover: none) and (pointer: coarse)');
+      const free = () => innerWidth <= 700 || touchDevice.matches;
+      // Su telefono i gesti valgono in tutto il visualizzatore, non solo sulla foto:
+      // il pizzico parte spesso con le dita sulla parte nera intorno.
+      const surface = lb;
+      const onControl = (e) => !!e.target.closest('.lb-btn, .lb-thumbs, .lb-head');
       const maxScale = () => {
         const p = list[pos];
         const w = media.offsetWidth || 1;
@@ -845,8 +850,9 @@
         if (Date.now() - lastTouch < 800) return; // il doppio tocco è gestito sotto
         toggleAt(e.clientX, e.clientY);
       });
-      media.addEventListener('pointerdown', (e) => {
-        try { media.setPointerCapture(e.pointerId); } catch (x) { /* non indispensabile */ }
+      surface.addEventListener('pointerdown', (e) => {
+        if (onControl(e) || (e.pointerType === 'mouse' && !media.contains(e.target))) return;
+        try { surface.setPointerCapture(e.pointerId); } catch (x) { /* non indispensabile */ }
         ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
         if (ptrs.size === 2) {
           const [a, b] = [...ptrs.values()];
@@ -857,7 +863,7 @@
           pan = { x: e.clientX, y: e.clientY, tx, ty };
         }
       });
-      media.addEventListener('pointermove', (e) => {
+      surface.addEventListener('pointermove', (e) => {
         const pt = ptrs.get(e.pointerId);
         if (!pt) return;
         pt.x = e.clientX; pt.y = e.clientY;
@@ -892,12 +898,13 @@
           }
         }
       };
-      ['pointerup', 'pointercancel'].forEach((t) => media.addEventListener(t, end));
+      ['pointerup', 'pointercancel'].forEach((t) => surface.addEventListener(t, end));
 
       return {
         reset() { s = 1; tx = 0; ty = 0; pinch = null; pan = null; ptrs.clear(); apply(false); },
         active: () => s > 1 || gestured,
         clearGesture() { gestured = false; },
+        recentTouch: () => Date.now() - lastTouch < 800,
         zoomBy(f) { const r = media.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, s * f, true); }
       };
     })();
@@ -975,7 +982,8 @@
     $('.lb-close', lb).addEventListener('click', close);
     $('.lb-prev', lb).addEventListener('click', () => step(-1));
     $('.lb-next', lb).addEventListener('click', () => step(1));
-    lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
+    // Tocco sullo sfondo: chiude solo col mouse (su telefono si usa Esc/✕, così doppio tocco e pizzico non chiudono)
+    lb.addEventListener('click', (e) => { if (e.target === lb && !zoom.recentTouch()) close(); });
     document.addEventListener('keydown', (e) => {
       if (lb.hidden) return;
       if (e.key === 'Escape') { if (lb.classList.contains('is-zoomed')) zoom.reset(); else close(); }

@@ -897,7 +897,9 @@ img, .px, .lb-media {
 @media (max-width: 860px) { .page-hero--photo .title { font-size: clamp(52px, 13vw, 120px); } }
 
 /* Telefono: da ingrandita la foto esce dalla cornice e può riempire tutto lo schermo */
-@media (max-width: 700px) {
+@media (max-width: 700px), (hover: none) and (pointer: coarse) {
+  .lightbox { touch-action: none; }
+  .lb-thumbs { touch-action: pan-x; }
   .lightbox { overflow: hidden; }
   .lightbox.is-zoomed .lb-media,
   .lightbox.is-zoomed .lb-media .px { overflow: visible; }
