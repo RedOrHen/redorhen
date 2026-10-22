@@ -15,7 +15,9 @@
   // Prezzi del Listino: questi sono quelli di partenza, sostituiti da quelli salvati
   const PRICES = {
     lv1: { price: 50 }, lv2: { price: 150 }, lv3_2: { price: 60 }, lv3_3: { price: 80 },
-    extra_foto: { price: 5, suffix: '/ foto' }, extra_trasferta: { price: 0 }, extra_evento: { price: 15, suffix: '· 3 foto' }
+    extra_foto: { price: 5, suffix: '/ foto' }, extra_trasferta: { price: 0 }, extra_evento: { price: 15, suffix: '· 3 foto' },
+    // numero di foto consegnate per pacchetto (stessa tabella, chiavi photos_*)
+    photos_lv1: { price: 10 }, photos_lv2: { price: 20 }, photos_lv3_2: { price: 10 }, photos_lv3_3: { price: 10 }
   };
   // Pacchetti per l'esempio degli sconti (il Boss Fight parte dal prezzo più basso)
   const PLANS = {
@@ -304,7 +306,8 @@
       const price = raw === '' ? null : num(raw);
       const isPlan = !key.startsWith('extra_');
       if ((raw !== '' && price == null) || (price != null && price < 0)) { prErr.textContent = 'Controlla i prezzi: solo numeri da 0 in su'; inp.focus(); return; }
-      if (isPlan && price == null) { prErr.textContent = 'I prezzi dei pacchetti non possono restare vuoti'; inp.focus(); return; }
+      if (isPlan && price == null) { prErr.textContent = 'Prezzi e foto dei pacchetti non possono restare vuoti'; inp.focus(); return; }
+      if (key.startsWith('photos_') && !(Number.isInteger(price) && price >= 1)) { prErr.textContent = 'Il numero di foto deve essere un intero da 1 in su'; inp.focus(); return; }
       const suf = prForm.elements[`${key}__suffix`];
       rows.push({ key, price, suffix: suf ? suf.value.trim() || null : null });
     }

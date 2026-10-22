@@ -1150,6 +1150,10 @@
     // il "da" del Boss Fight è il più basso dei prezzi di gruppo
     const group = ['lv3_2', 'lv3_3'].map((k) => map[k] && map[k].price).filter((n) => n != null);
     if (group.length) map.lv3_from = { price: Math.min(...group) };
+    $$('[data-count]').forEach((el) => {
+      const v = map[el.dataset.count];
+      if (v && Number.isInteger(v.price) && v.price > 0) el.textContent = String(v.price);
+    });
     $$('[data-key]').forEach((el) => {
       const v = map[el.dataset.key];
       if (!v) return;

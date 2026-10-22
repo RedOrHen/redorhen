@@ -410,3 +410,9 @@ body.admin::after { display: none; }
   .pr-row, .pr-group--extra .pr-row { grid-template-columns: minmax(0, 1fr) 104px; }
   .pr-suffix { grid-column: 2; }
 }
+.pr-group:not(.pr-group--extra) .pr-row { grid-template-columns: minmax(0, 1fr) 120px 100px; }
+.pr-input--n input { padding-right: 46px; }
+@media (max-width: 520px) {
+  .pr-group:not(.pr-group--extra) .pr-row { grid-template-columns: minmax(0, 1fr) 104px; }
+  .pr-input--n { grid-column: 2; }
+}

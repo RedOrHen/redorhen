@@ -166,6 +166,8 @@ Il browser resta collegato finché non si preme **Esci**.
 **Prezzi.** In alto ci sono i prezzi dei pacchetti (LV.1, LV.2, Boss Fight per 2 e per 3 persone) e degli extra.
 Si cambiano i numeri e si preme **Salva prezzi**: il Listino si aggiorna subito, senza push.
 - Il prezzo "da" del Boss Fight è calcolato da solo: il più basso tra 2 e 3 persone.
+- Accanto al prezzo di ogni pacchetto c'è il **numero di foto consegnate**: compare nella descrizione del pacchetto
+  ("Fino a N foto", "N foto consegnate", "circa N foto"). Si salva nella stessa tabella `price_items` con le chiavi `photos_*`.
 - Negli extra il testo a destra viene scritto dopo il prezzo (es. "/ foto"); un prezzo vuoto mostra "Da concordare".
 - Serve la tabella `price_items`: si crea una volta eseguendo `supabase/prezzi.sql` (contiene già i prezzi di partenza).
   Se Supabase non risponde, il Listino mostra i prezzi scritti in `listino.html`.

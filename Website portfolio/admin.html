@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=20261022l">
-  <link rel="stylesheet" href="admin.css?v=20261022l">
+  <link rel="stylesheet" href="style.css?v=20261022m">
+  <link rel="stylesheet" href="admin.css?v=20261022m">
 </head>
 <body class="admin">
 
@@ -77,24 +77,28 @@
         <h2>Prezzi</h2>
         <div class="pr-cols">
           <fieldset class="pr-group">
-            <legend class="pixel">Pacchetti</legend>
+            <legend class="pixel">Pacchetti · prezzo e foto consegnate</legend>
             <div class="pr-row">
               <label class="pr-name" for="pr-lv1">LV.1 Side Quest</label>
               <span class="pr-input"><input id="pr-lv1" name="lv1" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+              <span class="pr-input pr-input--n"><input name="photos_lv1" type="number" min="1" max="999" step="1" inputmode="numeric" aria-label="Foto consegnate, LV.1 Side Quest"><i aria-hidden="true">foto</i></span>
             </div>
             <div class="pr-row">
               <label class="pr-name" for="pr-lv2">LV.2 Main Quest</label>
               <span class="pr-input"><input id="pr-lv2" name="lv2" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+              <span class="pr-input pr-input--n"><input name="photos_lv2" type="number" min="1" max="999" step="1" inputmode="numeric" aria-label="Foto consegnate, LV.2 Main Quest"><i aria-hidden="true">foto</i></span>
             </div>
             <div class="pr-row">
               <label class="pr-name" for="pr-lv3_2">LV.3 Boss Fight · 2 persone</label>
               <span class="pr-input"><input id="pr-lv3_2" name="lv3_2" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+              <span class="pr-input pr-input--n"><input name="photos_lv3_2" type="number" min="1" max="999" step="1" inputmode="numeric" aria-label="Foto consegnate, Boss Fight 2 persone"><i aria-hidden="true">foto</i></span>
             </div>
             <div class="pr-row">
               <label class="pr-name" for="pr-lv3_3">LV.3 Boss Fight · 3 persone</label>
               <span class="pr-input"><input id="pr-lv3_3" name="lv3_3" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+              <span class="pr-input pr-input--n"><input name="photos_lv3_3" type="number" min="1" max="999" step="1" inputmode="numeric" aria-label="Foto consegnate, Boss Fight 3 persone"><i aria-hidden="true">foto</i></span>
             </div>
-            <p class="g-note">Il prezzo "da" del Boss Fight è il più basso dei due.</p>
+            <p class="g-note">Il prezzo "da" del Boss Fight è il più basso dei due. Le foto compaiono nella descrizione di ogni pacchetto.</p>
           </fieldset>
           <fieldset class="pr-group pr-group--extra">
             <legend class="pixel">Extra</legend>
@@ -321,11 +325,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/data/admin-config.js?v=20261022l"></script>
+  <script src="assets/data/admin-config.js?v=20261022m"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="assets/data/works.js?v=20261022l"></script>
-  <script src="admin.js?v=20261022l"></script>
-  <script src="admin-gallery.js?v=20261022l"></script>
-  <script src="admin-promo.js?v=20261022l"></script>
+  <script src="assets/data/works.js?v=20261022m"></script>
+  <script src="admin.js?v=20261022m"></script>
+  <script src="admin-gallery.js?v=20261022m"></script>
+  <script src="admin-promo.js?v=20261022m"></script>
 </body>
 </html>
