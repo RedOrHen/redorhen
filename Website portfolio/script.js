@@ -63,7 +63,7 @@
     character: r.character || '', series: r.series || '', category: r.category || '',
     cosplayer: r.cosplayer || '', featured: !!r.featured, published: r.published !== false,
     // src = originale in piena qualità; thumb = anteprima leggera per griglia e miniature
-    photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), thumb: p.thumb ? publicUrl(p.thumb) : undefined, w: p.w, h: p.h, alt: p.alt, hero: !!p.hero, contact: !!p.contact }))
+    photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), thumb: p.thumb ? publicUrl(p.thumb) : undefined, w: p.w, h: p.h, alt: p.alt, hero: !!p.hero, contact: !!p.contact, story: !!p.story, rule: !!p.rule }))
   });
 
   async function loadRemoteWorks() {
@@ -484,10 +484,27 @@
     gsap.to('.hero-content', { yPercent: 18, opacity: .2, ease: 'none', scrollTrigger: { trigger: '.hero', start: '30% top', end: 'bottom top', scrub: true } });
   }
 
-  // Foto della storia (desktop e telefono) prese dai set veri; un set "Ivy" va al primo capitolo
+  // Foto scelte nell'area admin con l'interruttore Storia o Regole (al massimo n, nell'ordine dei set)
+  const flagged = (flag, n) => WORKS.flatMap((w) => w.photos.filter((p) => p[flag]).map((p) => ({ w, p }))).slice(0, n);
+
+  // Foto della storia (desktop e telefono): prima quelle scelte nell'area admin (Storia);
+  // i capitoli rimasti usano i primi set, con un set "Ivy" al primo capitolo
   function fillStory() {
     const real = WORKS.filter((w) => !w.placeholder);
     if (!real.length) return;
+    const chosen = flagged('story', 3);
+    if (chosen.length) {
+      const fill = real.map((w) => ({ w, p: w.photos[0] })).filter((c) => !chosen.some((x) => x.p === c.p));
+      chosen.concat(fill).slice(0, 3).forEach(({ w, p }, i) => {
+        $$(`img[data-story="${i}"]`).forEach((img) => {
+          img.src = p.thumb || p.src;
+          img.width = p.w; img.height = p.h;
+          img.alt = p.alt || `${w.character}${w.series ? ' — ' + w.series : ''}`;
+          img.removeAttribute('data-ph');
+        });
+      });
+      return;
+    }
     const pick = [];
     const ivy = real.find((w) => /ivy/i.test(`${w.character} ${w.series}`));
     if (ivy) pick.push(ivy);
@@ -515,9 +532,12 @@
     const shown = new Set($$('img[data-story], .reel-frame img').map((i) => i.getAttribute('src')));
     const isShown = (w) => shown.has(w.photos[0].thumb || w.photos[0].src);
     const pool = real.filter((w) => !isShown(w)).concat(real.filter(isShown));
+    // prima le foto scelte nell'area admin (Regole), poi le copertine dei set non ancora mostrati
+    const chosen = flagged('rule', imgs.length);
+    const rest = pool.map((w) => ({ w, p: w.photos[0] })).filter((c) => !chosen.some((x) => x.p === c.p));
+    const list = chosen.concat(rest);
     imgs.forEach((img, i) => {
-      const w = pool[i % pool.length];
-      const p = w.photos[0];
+      const { w, p } = list[i % list.length];
       img.src = p.thumb || p.src;
       img.width = p.w; img.height = p.h;
       img.alt = p.alt || `${w.character}${w.series ? ' — ' + w.series : ''}`;

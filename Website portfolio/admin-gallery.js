@@ -90,7 +90,7 @@
   const cleanRow = (s) => ({
     id: s.id, character: s.character, series: s.series || null, category: s.category || null,
     cosplayer: s.cosplayer || null, featured: !!s.featured, published: s.published !== false,
-    position: s.position || 0, photos: s.photos.map((p) => (p.path ? { path: p.path, thumb: p.thumb || null, w: p.w, h: p.h, alt: p.alt || null, hero: p.hero || undefined, contact: p.contact || undefined } : p))
+    position: s.position || 0, photos: s.photos.map((p) => (p.path ? { path: p.path, thumb: p.thumb || null, w: p.w, h: p.h, alt: p.alt || null, hero: p.hero || undefined, contact: p.contact || undefined, story: p.story || undefined, rule: p.rule || undefined } : p))
   });
 
   const RemoteStore = (sb) => ({
@@ -247,7 +247,7 @@
       const draft = s.published === false;
       const flags = draft
         ? [hero || contact ? 'Solo ' + [hero && 'Hero', contact && 'Contatti'].filter(Boolean).join(' e ') : 'Bozza']
-        : [hero && 'Hero', contact && 'Contatti', s.featured && '★ Home'].filter(Boolean);
+        : [hero && 'Hero', contact && 'Contatti', s.photos.some((p) => p.story) && 'Storia', s.photos.some((p) => p.rule) && 'Regole', s.featured && '★ Home'].filter(Boolean);
       return `<article class="g-card${s.published === false ? ' is-draft' : ''}" data-id="${esc(s.id)}">
         <button class="g-cover" type="button" data-act="edit" aria-label="Modifica ${esc(s.character)}">
           ${cover ? `<img src="${esc(publicUrl(cover))}" alt="" loading="lazy" decoding="async">` : '<span class="g-nophoto pixel">Nessuna foto</span>'}
@@ -347,6 +347,8 @@
         <div class="g-flagbar">
           <button type="button" data-p="hero" aria-pressed="${!!p.hero}" title="Usa come immagine della Home">Hero</button>
           <button type="button" data-p="contact" aria-pressed="${!!p.contact}" title="Usa come immagine della pagina Contatti">Contatti</button>
+          <button type="button" data-p="story" aria-pressed="${!!p.story}" title="Mostra nella storia della Home">Storia</button>
+          <button type="button" data-p="rule" aria-pressed="${!!p.rule}" title="Mostra nelle regole della Home">Regole</button>
         </div>
         <figcaption>
           <button type="button" data-p="left" aria-label="Sposta prima" ${i === 0 ? 'disabled' : ''}>◀</button>
@@ -371,6 +373,10 @@
       const on = !ph[i][flag];
       ph.forEach((p) => { delete p[flag]; });
       if (on) ph[i][flag] = true;
+    }
+    // Storia e Regole: più foto possibili, ognuna si accende e si spegne da sola
+    if (b.dataset.p === 'story' || b.dataset.p === 'rule') {
+      if (ph[i][b.dataset.p]) delete ph[i][b.dataset.p]; else ph[i][b.dataset.p] = true;
     }
     if (b.dataset.p === 'del') {
       const [p] = ph.splice(i, 1);

@@ -339,9 +339,9 @@ body.admin::after { display: none; }
 
 /* Interruttori Hero / Contatti sotto ogni foto */
 .g-photo { aspect-ratio: 3 / 4; }
-.g-flagbar { position: absolute; left: 0; right: 0; bottom: 44px; display: flex; gap: 2px; padding: 0 2px; }
+.g-flagbar { position: absolute; left: 0; right: 0; bottom: 44px; display: flex; flex-wrap: wrap; gap: 2px; padding: 0 2px; }
 .g-flagbar button {
-  flex: 1; min-height: 40px; padding: 0 4px;
+  flex: 1 1 calc(50% - 2px); min-height: 40px; padding: 0 4px;
   font-family: var(--f-pixel); font-size: 12px; text-transform: uppercase;
   background: rgba(18, 11, 7, .85); color: var(--dust);
   transition: background .15s, color .15s;

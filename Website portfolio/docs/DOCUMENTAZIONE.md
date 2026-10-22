@@ -119,6 +119,13 @@ Se non è scelta nessuna foto, o Supabase tarda più di circa un secondo, restan
 La cornice di queste foto prende le proporzioni della foto scelta (verticale, orizzontale o quadrata), quindi la foto
 non viene mai tagliata; nella Home una foto orizzontale occupa al massimo metà della larghezza dello schermo.
 
+### Foto della storia e delle regole (Home)
+
+Nell'editor dei set, sotto ogni foto, gli interruttori **Storia** e **Regole** scelgono le foto di queste due sezioni.
+Se ne usano al massimo 3 per sezione, nell'ordine dei set e delle foto, e solo da set pubblicati.
+Se ne scegli meno di 3 (o nessuna), i posti rimasti li riempie il sito con le copertine dei primi set.
+Nella storia le cornici sono sempre verticali; nelle regole prendono le proporzioni della foto.
+
 ### Testi e contatti
 
 - Testi delle pagine: direttamente nei file HTML.
