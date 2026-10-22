@@ -774,12 +774,13 @@
     let set = null, list = [], pos = 0, opener = null;
 
     // La foto occupa tutto lo spazio disponibile
+    // Telefono: tutto lo schermo (i comandi stanno sopra la foto).
+    // Desktop: tutto tranne la fascia del titolo, le frecce ai lati e le miniature.
     const fit = (p) => {
-      const mobile = innerWidth < 700;
-      const full = document.fullscreenElement === lb;
-      const maxW = innerWidth - (mobile ? 24 : full ? 160 : 200);
-      const reserved = (full ? 0 : innerHeight * 0.14) + (mobile ? 120 : 70) + (list.length > 1 ? 84 : 0);
-      const maxH = innerHeight - reserved;
+      const mobile = innerWidth <= 700;
+      const vh = (window.visualViewport && window.visualViewport.height) || innerHeight;
+      const maxW = mobile ? innerWidth : innerWidth - 176;
+      const maxH = mobile ? vh : vh - 64 - (list.length > 1 ? 88 : 20);
       const s = Math.min(maxW / p.w, maxH / p.h);
       media.style.width = `${Math.round(p.w * s)}px`;
       media.style.height = `${Math.round(p.h * s)}px`;
@@ -801,6 +802,7 @@
         lbImg.style.transition = anim ? 'transform .35s cubic-bezier(.16, 1, .3, 1)' : 'none';
         lbImg.style.transform = s === 1 ? '' : `translate(${tx}px, ${ty}px) scale(${s})`;
         media.classList.toggle('is-zoomed', s > 1);
+        lb.classList.toggle('is-zoomed', s > 1); // da ingrandita spariscono tutti i comandi
         media.dataset.cursor = s > 1 ? 'Trascina' : 'Zoom';
       };
       const clamp = () => {
@@ -962,7 +964,7 @@
     lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
     document.addEventListener('keydown', (e) => {
       if (lb.hidden) return;
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') { if (lb.classList.contains('is-zoomed')) zoom.reset(); else close(); }
       if (e.key === 'ArrowRight') step(1);
       if (e.key === 'ArrowLeft') step(-1);
       if (e.key === '+' || e.key === '=') zoom.zoomBy(1.5);
