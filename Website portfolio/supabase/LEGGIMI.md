@@ -1,5 +1,7 @@
 # Area admin: come attivarla con Supabase
 
+> Documentazione completa del sito: [docs/DOCUMENTAZIONE.md](../docs/DOCUMENTAZIONE.md).
+
 L'area admin ha due schede:
 
 - **Calendario**: i tuoi appuntamenti (visibili solo a te).

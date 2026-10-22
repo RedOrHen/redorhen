@@ -81,7 +81,7 @@
   const cleanRow = (s) => ({
     id: s.id, character: s.character, series: s.series || null, category: s.category || null,
     cosplayer: s.cosplayer || null, featured: !!s.featured, published: s.published !== false,
-    position: s.position || 0, photos: s.photos.map((p) => (p.path ? { path: p.path, thumb: p.thumb || null, w: p.w, h: p.h, alt: p.alt || null } : p))
+    position: s.position || 0, photos: s.photos.map((p) => (p.path ? { path: p.path, thumb: p.thumb || null, w: p.w, h: p.h, alt: p.alt || null, hero: p.hero || undefined, contact: p.contact || undefined } : p))
   });
 
   const RemoteStore = (sb) => ({
@@ -199,7 +199,7 @@
     }
     list.innerHTML = sets.map((s, i) => {
       const cover = s.photos[0];
-      const flags = [s.featured && '★ Home', s.published === false && 'Bozza'].filter(Boolean);
+      const flags = [s.photos.some((p) => p.hero) && 'Hero', s.photos.some((p) => p.contact) && 'Contatti', s.featured && '★ Home', s.published === false && 'Bozza'].filter(Boolean);
       return `<article class="g-card${s.published === false ? ' is-draft' : ''}" data-id="${esc(s.id)}">
         <button class="g-cover" type="button" data-act="edit" aria-label="Modifica ${esc(s.character)}">
           ${cover ? `<img src="${esc(publicUrl(cover))}" alt="" loading="lazy" decoding="async">` : '<span class="g-nophoto pixel">Nessuna foto</span>'}
@@ -272,7 +272,7 @@
     const isNew = !s;
     draft = isNew
       ? { id: uuid(), character: '', series: '', category: '', cosplayer: '', featured: false, published: true, photos: [], _new: true }
-      : { ...s, photos: [...s.photos] };
+      : { ...s, photos: s.photos.map((p) => ({ ...p })) };
     uploaded = []; removed = [];
     $('#g-title').textContent = isNew ? 'Nuovo set' : 'Modifica set';
     F.character.value = draft.character || '';
@@ -295,6 +295,10 @@
       <figure class="g-photo" data-i="${i}">
         <img src="${esc(publicUrl(p))}" alt="" decoding="async">
         ${i === 0 ? '<span class="g-cover-tag pixel">Copertina</span>' : ''}
+        <div class="g-flagbar">
+          <button type="button" data-p="hero" aria-pressed="${!!p.hero}" title="Usa come immagine della Home">Hero</button>
+          <button type="button" data-p="contact" aria-pressed="${!!p.contact}" title="Usa come immagine della pagina Contatti">Contatti</button>
+        </div>
         <figcaption>
           <button type="button" data-p="left" aria-label="Sposta prima" ${i === 0 ? 'disabled' : ''}>◀</button>
           ${i > 0 ? '<button type="button" data-p="cover" aria-label="Usa come copertina">★</button>' : ''}
@@ -312,6 +316,13 @@
     if (b.dataset.p === 'left' && i > 0) [ph[i - 1], ph[i]] = [ph[i], ph[i - 1]];
     if (b.dataset.p === 'right' && i < ph.length - 1) [ph[i + 1], ph[i]] = [ph[i], ph[i + 1]];
     if (b.dataset.p === 'cover') ph.unshift(ph.splice(i, 1)[0]);
+    if (b.dataset.p === 'hero' || b.dataset.p === 'contact') {
+      // Una sola foto per impostazione: le altre del set la perdono, quelle degli altri set al salvataggio
+      const flag = b.dataset.p;
+      const on = !ph[i][flag];
+      ph.forEach((p) => { delete p[flag]; });
+      if (on) ph[i][flag] = true;
+    }
     if (b.dataset.p === 'del') {
       const [p] = ph.splice(i, 1);
       if (uploaded.includes(p)) store.removeFiles([p]).catch(() => {});
@@ -392,6 +403,14 @@
     btn.disabled = true;
     try {
       const saved = await store.save(draft);
+      for (const flag of ['hero', 'contact']) {
+        if (!draft.photos.some((p) => p[flag])) continue;
+        for (const other of sets) {
+          if (other.id === draft.id || !other.photos.some((p) => p[flag])) continue;
+          other.photos = other.photos.map((p) => { const q = { ...p }; delete q[flag]; return q; });
+          await store.save(other);
+        }
+      }
       if (removed.length) store.removeFiles(removed).catch(() => {});
       uploaded = []; removed = [];
       dlg.close();

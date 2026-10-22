@@ -63,7 +63,7 @@
     character: r.character || '', series: r.series || '', category: r.category || '',
     cosplayer: r.cosplayer || '', featured: !!r.featured,
     // src = originale in piena qualità; thumb = anteprima leggera per griglia e miniature
-    photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), thumb: p.thumb ? publicUrl(p.thumb) : undefined, w: p.w, h: p.h, alt: p.alt }))
+    photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), thumb: p.thumb ? publicUrl(p.thumb) : undefined, w: p.w, h: p.h, alt: p.alt, hero: !!p.hero, contact: !!p.contact }))
   });
 
   async function loadRemoteWorks() {
@@ -149,8 +149,11 @@
       el.classList.remove('px-done');
       if (el._pxTimer) clearTimeout(el._pxTimer);
       try {
-        if (!img.complete) await new Promise((r) => { img.addEventListener('load', r, { once: true }); img.addEventListener('error', r, { once: true }); });
-        if (img.decode) await img.decode().catch(() => {});
+        // Limiti di tempo: in alcuni casi (scheda in secondo piano) load/decode non rispondono mai
+        // e la foto resterebbe invisibile per sempre.
+        const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+        if (!img.complete) await Promise.race([new Promise((r) => { img.addEventListener('load', r, { once: true }); img.addEventListener('error', r, { once: true }); }), wait(6000)]);
+        if (img.decode) await Promise.race([img.decode().catch(() => {}), wait(800)]);
       } catch (e) { /* mostra comunque */ }
       const w = el.offsetWidth, h = el.offsetHeight;
       if (!w || !h || !img.naturalWidth) { el.classList.add('px-done'); return; }
@@ -527,7 +530,8 @@
       const tl = gsap.timeline();
       tl.add(animateChars($$('.hero [data-chars]'), { stagger: .025, duration: 1 }), 0);
       if (heroPx) {
-        tl.add(() => pixel.run(heroPx), 0);
+        // la comparsa a pixel parte quando è pronta la foto scelta nell'area admin
+        tl.add(() => { heroReady.then(() => pixel.run(heroPx)); }, 0);
         tl.fromTo(heroPx, { scale: 1.12 }, { scale: 1, duration: 2.4, ease: 'power2.out' }, 0);
       }
       tl.fromTo($$('.hero [data-intro]'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .9, ease: 'expo.out', stagger: .08 }, .3);
@@ -1102,11 +1106,40 @@
   // Immagini con effetto pixel presenti nell'HTML (escluse quelle gestite a mano)
   $$('.px').forEach((el) => { if (!el.hasAttribute('data-px-manual')) pixel.observe(el); });
 
+  // I set da Supabase servono a Home, Lavori e Contatti (anche per le foto scelte come Hero e Contatti)
+  const remoteP = ['home', 'lavori', 'contatti'].includes(page) ? loadRemoteWorks() : Promise.resolve(null);
+  // Foto scelta nell'area admin per un'impostazione ('hero' o 'contact').
+  // null se non ce n'è nessuna o se Supabase tarda: resta l'immagine già presente nella pagina.
+  const chosenPhoto = (flag, ms) => Promise.race([
+    remoteP.then((sets) => {
+      for (const w of sets || []) { const p = w.photos.find((x) => x[flag]); if (p) return { w, p }; }
+      return null;
+    }).catch(() => null),
+    new Promise((res) => setTimeout(() => res(null), ms))
+  ]);
+  const usePhoto = (img, c) => {
+    if (!img || !c) return;
+    img.src = c.p.thumb || c.p.src;
+    if (c.p.w && c.p.h) { img.width = c.p.w; img.height = c.p.h; }
+    img.alt = c.p.alt || `${c.w.character}${c.w.series ? ' — ' + c.w.series : ''}`;
+  };
+  const heroReady = page === 'home'
+    ? chosenPhoto('hero', 1200).then((c) => {
+      usePhoto($('.hero-photo img'), c);
+      const tag = $('.hero-photo .frame-tag');
+      if (c && tag) tag.textContent = `#01 — ${c.w.character}`;
+    })
+    : Promise.resolve();
+  if (page === 'contatti') {
+    const px = $('.page-hero-photo .px');
+    chosenPhoto('contact', 1500).then((c) => { usePhoto($('.page-hero-photo img'), c); if (px) pixel.run(px); });
+  }
+
   if (page === 'home') heroIntro();
 
   (async () => {
   if (page === 'home' || page === 'lavori') {
-    const remote = await loadRemoteWorks();
+    const remote = await remoteP;
     if (remote) WORKS = remote;
   }
   normalizeWorks();

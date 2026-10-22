@@ -1,5 +1,9 @@
 # REDORHEN — Master Build Plan
 
+> **Documento storico.** È il piano creativo scritto all'inizio del progetto (20 ottobre 2026). Il sito poi è cambiato
+> (niente video, area admin, galleria su Supabase, listino reale…). Lo stato attuale è descritto in
+> [docs/DOCUMENTAZIONE.md](docs/DOCUMENTAZIONE.md).
+
 > Creative brief + istruzioni di implementazione per Claude Code
 > Progetto: sito portfolio di fotografia cosplay · Versione 1.0 · 20 ottobre 2026
 
