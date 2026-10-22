@@ -1093,6 +1093,8 @@
   const heroReady = page === 'home'
     ? chosenPhoto('hero', 1200).then((c) => {
       usePhoto($('.hero-photo img'), c);
+      // proporzioni anche sulla hero: decidono quanto spazio resta al titolo
+      if (c && c.p.w && c.p.h) $('.hero').style.setProperty('--ar', String(c.p.w / c.p.h));
       const tag = $('.hero-photo .frame-tag');
       if (c && tag) tag.textContent = `#01 — ${c.w.character}`;
     })

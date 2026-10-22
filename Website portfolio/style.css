@@ -278,6 +278,8 @@ main { display: block; }
   padding: calc(var(--header-h) + 24px) var(--gutter) calc(9vh + 72px);
   overflow: hidden;
   background: var(--ink);
+  /* altezza della foto: serve anche a calcolare lo spazio libero per il titolo */
+  --ph: min(74svh, 760px, calc(40vw / var(--ar, .8)));
 }
 .hero-bar {
   position: absolute; left: 0; right: 0; height: 9vh; z-index: 4;
@@ -291,7 +293,7 @@ main { display: block; }
   right: calc(var(--gutter) + 4vw);
   top: 0; bottom: 0; margin: auto 0;
   /* la cornice ha le proporzioni della foto (--ar = larghezza / altezza): la foto non viene mai tagliata */
-  height: min(74svh, 760px, calc(46vw / var(--ar, .8)));
+  height: var(--ph);
   aspect-ratio: var(--ar, .8);
 }
 .hero-clip { width: 100%; height: 100%; overflow: hidden; }
@@ -319,6 +321,11 @@ main { display: block; }
   line-height: .9; letter-spacing: -.01em; text-transform: uppercase;
 }
 .hero-title .line:last-child > span { color: var(--ember); }
+/* Su desktop il titolo sta tutto a sinistra della foto e si adatta allo spazio libero */
+@media (min-width: 901px) {
+  .hero-content { container-type: inline-size; max-width: calc(100% - var(--ph) * var(--ar, .8) - 4vw - 40px); }
+  .hero-title { font-size: clamp(38px, 11.4cqi, 190px); }
+}
 .hero-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 28px 40px; }
 .hero-foot .lede { max-width: 42ch; color: var(--cream); opacity: .85; }
 .hero-ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; }
