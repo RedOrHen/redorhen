@@ -1120,7 +1120,12 @@
   const usePhoto = (img, c) => {
     if (!img || !c) return;
     img.src = c.p.thumb || c.p.src;
-    if (c.p.w && c.p.h) { img.width = c.p.w; img.height = c.p.h; }
+    if (c.p.w && c.p.h) {
+      img.width = c.p.w; img.height = c.p.h;
+      // la cornice prende le proporzioni della foto, così la foto non viene tagliata
+      const fig = img.closest('figure');
+      if (fig) fig.style.setProperty('--ar', String(c.p.w / c.p.h));
+    }
     img.alt = c.p.alt || `${c.w.character}${c.w.series ? ' — ' + c.w.series : ''}`;
   };
   const heroReady = page === 'home'

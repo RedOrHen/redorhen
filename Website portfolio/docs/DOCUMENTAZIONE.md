@@ -113,6 +113,8 @@ Ogni foto su Supabase ha due file nella cartella del suo set:
 Si scelgono nell'editor dei set con gli interruttori **Hero** e **Contatti** sotto ogni foto (vedi §5).
 Se non è scelta nessuna foto, o Supabase tarda più di circa un secondo, restano le immagini locali
 `assets/works/hero.jpg` e `assets/works/contatti.jpg`. La foto della pagina Listino è sempre `assets/works/listino.jpg`.
+La cornice di queste foto prende le proporzioni della foto scelta (verticale, orizzontale o quadrata), quindi la foto
+non viene mai tagliata; nella Home una foto orizzontale occupa al massimo metà della larghezza dello schermo.
 
 ### Testi e contatti
 
