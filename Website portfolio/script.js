@@ -793,17 +793,15 @@
       let s = 1, tx = 0, ty = 0, gestured = false;
       let pinch = null, pan = null, lastTap = 0, lastTapX = 0, lastTapY = 0, lastTouch = 0;
       const ptrs = new Map();
-      // Telefono: da ingrandita la foto può uscire dalla cornice e riempire tutto lo schermo
-      const touchDevice = matchMedia('(hover: none) and (pointer: coarse)');
-      const free = () => innerWidth <= 700 || touchDevice.matches;
-      // Su telefono i gesti valgono in tutto il visualizzatore, non solo sulla foto:
-      // il pizzico parte spesso con le dita sulla parte nera intorno.
+      // Da ingrandita la foto esce dalla cornice e può riempire tutto lo schermo (telefono e desktop).
+      // I gesti valgono in tutto il visualizzatore, non solo sulla foto:
+      // il pizzico (o la rotella) parte spesso sulla parte nera intorno.
       const surface = lb;
       const onControl = (e) => !!e.target.closest('.lb-btn, .lb-thumbs, .lb-head');
       const maxScale = () => {
         const p = list[pos];
         const w = media.offsetWidth || 1;
-        return Math.max(3, Math.min(free() ? 12 : 8, ((p && p.w) || w) / w * 2));
+        return Math.max(3, Math.min(12, ((p && p.w) || w) / w * 2));
       };
       const apply = (anim) => {
         lbImg.style.transition = anim ? 'transform .35s cubic-bezier(.16, 1, .3, 1)' : 'none';
@@ -814,13 +812,7 @@
       };
       const clamp = () => {
         const w = media.offsetWidth, h = media.offsetHeight;
-        if (!free()) {
-          // Desktop: la foto resta dentro la sua cornice
-          tx = Math.min(0, Math.max(w - w * s, tx));
-          ty = Math.min(0, Math.max(h - h * s, ty));
-          return;
-        }
-        // Telefono: i limiti sono i bordi dello schermo. Se la foto ingrandita è più piccola
+        // I limiti sono i bordi dello schermo. Se la foto ingrandita è più piccola
         // dello schermo in una direzione resta centrata, altrimenti si sposta fino ai suoi bordi.
         const r = media.getBoundingClientRect();
         const W = innerWidth;
@@ -842,7 +834,8 @@
       };
       const toggleAt = (cx, cy) => zoomAt(cx, cy, s > 1 ? 1 : 2.5, true);
 
-      media.addEventListener('wheel', (e) => {
+      surface.addEventListener('wheel', (e) => {
+        if (onControl(e)) return;
         e.preventDefault();
         zoomAt(e.clientX, e.clientY, s * Math.exp(-e.deltaY * 0.0018));
       }, { passive: false });
@@ -851,7 +844,7 @@
         toggleAt(e.clientX, e.clientY);
       });
       surface.addEventListener('pointerdown', (e) => {
-        if (onControl(e) || (e.pointerType === 'mouse' && !media.contains(e.target))) return;
+        if (onControl(e) || (e.pointerType === 'mouse' && s === 1)) return;
         try { surface.setPointerCapture(e.pointerId); } catch (x) { /* non indispensabile */ }
         ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
         if (ptrs.size === 2) {
@@ -983,7 +976,7 @@
     $('.lb-prev', lb).addEventListener('click', () => step(-1));
     $('.lb-next', lb).addEventListener('click', () => step(1));
     // Tocco sullo sfondo: chiude solo col mouse (su telefono si usa Esc/✕, così doppio tocco e pizzico non chiudono)
-    lb.addEventListener('click', (e) => { if (e.target === lb && !zoom.recentTouch()) close(); });
+    lb.addEventListener('click', (e) => { if (e.target === lb && !zoom.recentTouch() && !lb.classList.contains('is-zoomed')) close(); });
     document.addEventListener('keydown', (e) => {
       if (lb.hidden) return;
       if (e.key === 'Escape') { if (lb.classList.contains('is-zoomed')) zoom.reset(); else close(); }
