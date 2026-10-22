@@ -445,7 +445,9 @@ main { display: block; }
   display: grid; place-items: center;
 }
 .story-frames {
-  position: relative; height: 100%; max-height: 760px; aspect-ratio: 4 / 5; max-width: 100%;
+  position: relative; aspect-ratio: var(--ar, .8);
+  /* la cornice prende le proporzioni della foto e sta nello spazio disponibile senza tagliarla */
+  width: min(100%, calc((100vh - var(--header-h) - 12vh) * var(--ar, .8)), calc(760px * var(--ar, .8)));
 }
 .story-frame {
   position: absolute; inset: 0;
@@ -476,7 +478,7 @@ main { display: block; }
   .story-stage { display: none; }
   .chapter { min-height: 0; opacity: 1; padding: 0 0 72px; gap: 18px; }
   .chapter-photo { display: block; }
-  .chapter-photo .px { aspect-ratio: 4 / 5; }
+  .chapter-photo .px { aspect-ratio: var(--ar, .8); }
 }
 
 /* ---------- Reel (filmstrip) ---------- */
