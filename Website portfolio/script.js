@@ -793,10 +793,12 @@
       let s = 1, tx = 0, ty = 0, gestured = false;
       let pinch = null, pan = null, lastTap = 0, lastTapX = 0, lastTapY = 0, lastTouch = 0;
       const ptrs = new Map();
+      // Telefono: da ingrandita la foto può uscire dalla cornice e riempire tutto lo schermo
+      const free = () => innerWidth <= 700;
       const maxScale = () => {
         const p = list[pos];
         const w = media.offsetWidth || 1;
-        return Math.max(3, Math.min(8, ((p && p.w) || w) / w * 2));
+        return Math.max(3, Math.min(free() ? 12 : 8, ((p && p.w) || w) / w * 2));
       };
       const apply = (anim) => {
         lbImg.style.transition = anim ? 'transform .35s cubic-bezier(.16, 1, .3, 1)' : 'none';
@@ -807,8 +809,20 @@
       };
       const clamp = () => {
         const w = media.offsetWidth, h = media.offsetHeight;
-        tx = Math.min(0, Math.max(w - w * s, tx));
-        ty = Math.min(0, Math.max(h - h * s, ty));
+        if (!free()) {
+          // Desktop: la foto resta dentro la sua cornice
+          tx = Math.min(0, Math.max(w - w * s, tx));
+          ty = Math.min(0, Math.max(h - h * s, ty));
+          return;
+        }
+        // Telefono: i limiti sono i bordi dello schermo. Se la foto ingrandita è più piccola
+        // dello schermo in una direzione resta centrata, altrimenti si sposta fino ai suoi bordi.
+        const r = media.getBoundingClientRect();
+        const W = innerWidth;
+        const H = (window.visualViewport && window.visualViewport.height) || innerHeight;
+        const sw = w * s, sh = h * s;
+        tx = sw > W ? Math.min(-r.left, Math.max(W - r.left - sw, tx)) : (W - sw) / 2 - r.left;
+        ty = sh > H ? Math.min(-r.top, Math.max(H - r.top - sh, ty)) : (H - sh) / 2 - r.top;
       };
       const zoomAt = (cx, cy, target, anim) => {
         const r = media.getBoundingClientRect();

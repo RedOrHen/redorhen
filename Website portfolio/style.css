@@ -895,3 +895,11 @@ img, .px, .lb-media {
 .plan-price small:first-child { margin: 0 8px 0 0; }
 .page-hero--photo .title { font-size: clamp(52px, 8vw, 150px); }
 @media (max-width: 860px) { .page-hero--photo .title { font-size: clamp(52px, 13vw, 120px); } }
+
+/* Telefono: da ingrandita la foto esce dalla cornice e può riempire tutto lo schermo */
+@media (max-width: 700px) {
+  .lightbox { overflow: hidden; }
+  .lightbox.is-zoomed .lb-media,
+  .lightbox.is-zoomed .lb-media .px { overflow: visible; }
+  .lightbox.is-zoomed .lb-media { z-index: 3; }
+}
