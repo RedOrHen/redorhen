@@ -503,9 +503,6 @@
         img.width = p.w; img.height = p.h;
         img.alt = p.alt || `${w.character}${w.series ? ' — ' + w.series : ''}`;
         img.removeAttribute('data-ph');
-        // la cornice del capitolo (telefono) prende le proporzioni della foto: niente tagli
-        const fig = img.closest('.chapter-photo');
-        if (fig && p.w && p.h) fig.style.setProperty('--ar', String(p.w / p.h));
       });
     });
   }
@@ -622,11 +619,6 @@
       const ch = chapters[i];
       if (lvl && ch) lvl.textContent = ch.dataset.level;
       if (lvlBar && ch) lvlBar.style.transform = `scaleX(${ch.dataset.xp})`;
-      // la cornice fissa (desktop) cambia proporzioni con la foto del capitolo
-      const img = $('img', frames[i]);
-      const box = $('.story-frames');
-      const iw = +img?.getAttribute('width'), ih = +img?.getAttribute('height');
-      if (box && iw && ih) box.style.setProperty('--ar', String(iw / ih));
       const px = $('.px', frames[i]);
       if (px) pixel.run(px);
     };
