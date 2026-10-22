@@ -27,6 +27,7 @@ e visibili da qualsiasi dispositivo, segui questi passi (circa 10 minuti).
 
 1. Nel menu a sinistra: **SQL Editor** → **New query**.
 2. Copia tutto il contenuto di `supabase/setup.sql`, incollalo e premi **Run**.
+   Se il progetto era già attivo prima della scheda **Sconti**, basta eseguire allo stesso modo solo `supabase/sconti.sql`.
 3. Deve comparire "Success. No rows returned". Lo script crea anche la tabella dei set e lo spazio
    "gallery" per le foto (lettura pubblica, caricamento solo dopo il login).
 

@@ -67,6 +67,7 @@ Website portfolio/
 ├─ admin.css        stile dell'area admin
 ├─ admin.js         login Supabase e calendario
 ├─ admin-gallery.js editor dei set (scheda Lavori dell'area admin)
+├─ admin-promo.js   sconti a tempo (scheda Sconti dell'area admin)
 ├─ assets/
 │  ├─ data/works.js         contatti del sito + set di riserva (vedi §4)
 │  ├─ data/admin-config.js  indirizzo e chiave pubblica di Supabase
@@ -160,6 +161,20 @@ Il browser resta collegato finché non si preme **Esci**.
 - **Importa da works.js**: copia su Supabase i set con foto vere presenti in `works.js`.
 - **Vedi la pagina ↗** apre la pagina Lavori.
 
+### Sconti a tempo (scheda Sconti)
+
+- Il modulo chiede: nome facoltativo (es. "Promo Halloween", si vede nel Listino), valore dello sconto in **%** o in **€**,
+  primo e ultimo giorno (compresi), pacchetti a cui si applica (LV.1, LV.2, LV.3) e se è attivo.
+  Sotto il modulo un esempio mostra subito i prezzi scontati.
+- Nei giorni del periodo il Listino mostra una fascia con lo sconto, il prezzo pieno barrato e quello scontato
+  (anche nei prezzi per 2 e 3 persone del Boss Fight). Gli extra non vengono scontati.
+- Se più sconti valgono nello stesso giorno, per ogni pacchetto si applica quello più conveniente.
+- Nella lista: **Modifica**, **Attiva/Disattiva** (lo sconto resta salvato ma non si vede), **Elimina**.
+  Lo stato indica Attivo ora, Programmato, Scaduto o Disattivato.
+- Serve la tabella `promotions`: si crea una volta eseguendo `supabase/sconti.sql` nell'SQL Editor di Supabase.
+- I prezzi pieni sono scritti in `listino.html` (attributo `data-price`): se cambiano, aggiornare anche `PLANS` in `admin-promo.js`
+  (serve solo per l'esempio nel modulo).
+
 ---
 
 ## 6. Pubblicazione
@@ -176,7 +191,7 @@ Il browser resta collegato finché non si preme **Esci**.
 GitHub Pages fa conservare le pagine al browser per circa 10 minuti. Per questo i file CSS e JS sono richiamati con un
 numero di versione, ad esempio `script.js?v=20261022d`.
 
-- **Quando si modifica** `style.css`, `script.js`, `admin.css`, `admin.js`, `admin-gallery.js` o i file in `assets/data/`,
+- **Quando si modifica** `style.css`, `script.js`, `admin.css`, `admin.js`, `admin-gallery.js`, `admin-promo.js` o i file in `assets/data/`,
   aggiornare il numero `?v=` in **tutte** le pagine HTML (stesso valore ovunque), così i browser scaricano i file nuovi.
 - Per vedere subito una pagina appena pubblicata senza aspettare la cache, aggiungere un parametro qualsiasi all'indirizzo,
   ad esempio `https://redorhen.github.io/redorhen/lavori.html?x=1`.
@@ -201,6 +216,7 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
 |---|---|---|---|
 | tabella `appointments` | appuntamenti del calendario | solo il proprietario, dopo il login | solo il proprietario |
 | tabella `gallery_sets` | set della galleria (testi, ordine, elenco foto, scelte Hero/Contatti) | i set pubblicati e quelli con la foto Hero/Contatti; le altre bozze solo il proprietario | solo il proprietario |
+| tabella `promotions` | sconti a tempo del Listino | gli sconti attivi nel periodo; tutti solo il proprietario | solo il proprietario |
 | spazio file `gallery` | foto originali e anteprime | tutti (servono al sito) | solo il proprietario |
 
 - La chiave in `admin-config.js` è quella **publishable/anon**, fatta per stare nel codice pubblico: la sicurezza
@@ -231,6 +247,7 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
 | Caricamento foto rifiutato ("limite più basso di 20 MB") | limite del contenitore `gallery` | SQL: `update storage.buckets set file_size_limit = 20971520 where id = 'gallery';` |
 | Login admin: "Email logins are disabled" | provider Email spento in Supabase | Authentication → Sign In / Providers → attivare Email (lasciando spente le iscrizioni) |
 | Il modulo contatti non arriva | email Formspree non confermata | confermare l'indirizzo dall'email di Formspree, controllare lo spam |
+| Lo sconto non compare nel Listino | tabella `promotions` mancante, sconto disattivato o fuori periodo | eseguire `supabase/sconti.sql`; controllare date e interruttore Attivo |
 | Un nuovo file non è online | non è nell'elenco del workflow | aggiungerlo alla riga `cp -r` di `.github/workflows/deploy.yml` |
 
 ---
@@ -246,3 +263,5 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
   - Listino con i prezzi reali; 20 foto 2025–2026 caricate e divise per categoria.
   - Visualizzatore più grande; zoom a tutto schermo su telefono e desktop; comandi nascosti da ingrandita.
   - Scelta della foto della Home e della pagina Contatti dall'area admin (interruttori Hero / Contatti).
+  - Seconda revisione: pilastri della Home con foto, filtri di Lavori in una riga su telefono, meno spazi vuoti.
+  - Extra del Listino aggiornati; sconti a tempo impostabili dall'area admin (scheda Sconti).

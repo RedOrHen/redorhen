@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=20261022j">
+  <link rel="stylesheet" href="style.css?v=20261022k">
   <script>
     (function (d) {
       var c = d.documentElement.classList; c.add('js');
@@ -61,11 +61,13 @@
       <figure class="page-hero-photo" data-intro><div class="px"><img src="assets/works/listino.jpg" alt="Due cosplayer di Paradise Kiss: una sistema i capelli all'altra" width="1200" height="1500" decoding="async" fetchpriority="high"></div></figure>
     </section>
 
+    <p class="promo-banner pixel" id="promo-banner" role="status" hidden></p>
+
     <div class="plans">
-      <article class="plan" data-reveal>
+      <article class="plan" data-plan="lv1" data-reveal>
         <h2><span class="ember">LV.1</span> Side Quest</h2>
         <p class="plan-desc">Per iniziare, provare un personaggio nuovo o fare qualche scatto senza troppi pensieri.</p>
-        <p class="plan-price">50 €</p>
+        <p class="plan-price"><span data-price="50">50 €</span></p>
         <ul>
           <li>2 ore di set</li>
           <li>Fino a 10 foto consegnate, scelte tra quelle scattate</li>
@@ -73,11 +75,11 @@
         </ul>
         <a class="btn btn--ghost" href="contatti.html?pacchetto=lv1">Scegli LV.1 <span class="arrow" aria-hidden="true">→</span></a>
       </article>
-      <article class="plan plan--hot" data-reveal>
+      <article class="plan plan--hot" data-plan="lv2" data-reveal>
         <span class="plan-badge pixel">Consigliato</span>
         <h2><span class="ember">LV.2</span> Main Quest</h2>
         <p class="plan-desc">Il tempo giusto per sperimentare con luce e pose e raccontare davvero il personaggio.</p>
-        <p class="plan-price">150 €</p>
+        <p class="plan-price"><span data-price="150">150 €</span></p>
         <ul>
           <li>3 ore di set o più</li>
           <li>20 foto consegnate</li>
@@ -85,13 +87,13 @@
         </ul>
         <a class="btn" href="contatti.html?pacchetto=lv2" data-magnetic>Scegli LV.2 <span class="arrow" aria-hidden="true">→</span></a>
       </article>
-      <article class="plan" data-reveal>
+      <article class="plan" data-plan="lv3" data-reveal>
         <h2><span class="ember">LV.3</span> Boss Fight</h2>
         <p class="plan-desc">Foto di gruppo, con scatti tutti insieme e singoli. Contattami per i dettagli.</p>
-        <p class="plan-price"><small>da</small> 60 €</p>
+        <p class="plan-price"><small>da</small> <span data-price="60">60 €</span></p>
         <ul>
-          <li>2 persone, circa 10 foto (di gruppo e singole): 60 €</li>
-          <li>3 persone, circa 10 foto (di gruppo e singole): 80 €</li>
+          <li><span>2 persone, circa 10 foto (di gruppo e singole): <span data-price="60">60 €</span></span></li>
+          <li><span>3 persone, circa 10 foto (di gruppo e singole): <span data-price="80">80 €</span></span></li>
           <li>Gruppi più grandi: scrivimi e ne parliamo</li>
         </ul>
         <a class="btn btn--ghost" href="contatti.html?pacchetto=lv3">Scrivimi per il gruppo <span class="arrow" aria-hidden="true">→</span></a>
@@ -194,10 +196,11 @@
     </div>
   </footer>
 
-  <script src="assets/data/works.js?v=20261022j"></script>
+  <script src="assets/data/works.js?v=20261022k"></script>
+  <script src="assets/data/admin-config.js?v=20261022k"></script>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="script.js?v=20261022j"></script>
+  <script src="script.js?v=20261022k"></script>
 </body>
 </html>

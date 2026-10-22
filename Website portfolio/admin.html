@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=20261022j">
-  <link rel="stylesheet" href="admin.css?v=20261022j">
+  <link rel="stylesheet" href="style.css?v=20261022k">
+  <link rel="stylesheet" href="admin.css?v=20261022k">
 </head>
 <body class="admin">
 
@@ -40,6 +40,7 @@
       <nav class="admin-tabs" aria-label="Sezioni admin">
         <button class="btn-sm is-active" type="button" data-tab="calendar" aria-pressed="true">Calendario</button>
         <button class="btn-sm" type="button" data-tab="gallery" aria-pressed="false">Lavori</button>
+        <button class="btn-sm" type="button" data-tab="promo" aria-pressed="false">Sconti</button>
       </nav>
       <div class="admin-user">
         <span class="pixel muted" id="user-email"></span>
@@ -62,6 +63,66 @@
       </div>
       <p class="g-hint">Ogni set è un riquadro della pagina Lavori; la prima foto è la copertina. Usa ▲ ▼ per cambiare l'ordine. Finché non c'è almeno un set pubblicato con foto, il sito mostra i lavori di works.js.</p>
       <div class="g-list" id="g-list"></div>
+    </section>
+
+    <!-- SCONTI -->
+    <section class="g-shell p-shell" id="tab-promo" hidden aria-label="Sconti">
+      <div class="cal-toolbar">
+        <h1 class="cal-title">Sconti</h1>
+        <div class="cal-actions">
+          <a class="btn-sm" id="p-preview" href="listino.html" target="_blank" rel="noopener">Vedi il Listino ↗</a>
+        </div>
+      </div>
+      <p class="g-hint">Scegli lo sconto, il periodo e i pacchetti: dal primo all'ultimo giorno compresi il Listino mostra il prezzo barrato e quello scontato. Gli extra non vengono scontati. Se più sconti valgono nello stesso giorno, per ogni pacchetto si applica quello più conveniente.</p>
+      <div class="p-layout">
+        <form class="side-box p-form" id="p-form" novalidate>
+          <h2 id="p-title">Nuovo sconto</h2>
+          <label class="a-field">
+            <span>Nome (facoltativo, si vede nel Listino)</span>
+            <input name="label" type="text" maxlength="120" placeholder="es. Promo Halloween">
+          </label>
+          <div class="p-amount">
+            <label class="a-field">
+              <span>Sconto</span>
+              <input name="amount" type="number" min="1" max="99999" step="1" inputmode="decimal" required placeholder="es. 20">
+            </label>
+            <div class="a-field">
+              <span>Tipo</span>
+              <div class="p-kind" role="group" aria-label="Tipo di sconto">
+                <label><input type="radio" name="kind" value="percent" checked><span>%</span></label>
+                <label><input type="radio" name="kind" value="euro"><span>€</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="p-dates">
+            <label class="a-field">
+              <span>Dal</span>
+              <input name="starts" type="date" required>
+            </label>
+            <label class="a-field">
+              <span>Al (compreso)</span>
+              <input name="ends" type="date" required>
+            </label>
+          </div>
+          <div class="a-field">
+            <span>Pacchetti</span>
+            <label class="a-check"><input type="checkbox" name="plans" value="lv1" checked> LV.1 Side Quest</label>
+            <label class="a-check"><input type="checkbox" name="plans" value="lv2" checked> LV.2 Main Quest</label>
+            <label class="a-check"><input type="checkbox" name="plans" value="lv3" checked> LV.3 Boss Fight</label>
+          </div>
+          <label class="a-check"><input type="checkbox" name="active" checked> Attivo</label>
+          <p class="p-preview-text pixel" id="p-example" aria-live="polite"></p>
+          <p class="ev-error" role="alert"></p>
+          <div class="ev-actions">
+            <button class="btn-sm" type="button" id="p-reset" hidden>Annulla modifica</button>
+            <button class="btn" type="submit" id="p-save">Salva sconto</button>
+          </div>
+        </form>
+        <div class="p-list-wrap">
+          <h2 class="p-list-title">Sconti salvati</h2>
+          <div class="p-list" id="p-list"></div>
+        </div>
+      </div>
     </section>
 
     <div class="cal-shell" id="tab-calendar">
@@ -209,10 +270,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/data/admin-config.js?v=20261022j"></script>
+  <script src="assets/data/admin-config.js?v=20261022k"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="assets/data/works.js?v=20261022j"></script>
-  <script src="admin.js?v=20261022j"></script>
-  <script src="admin-gallery.js?v=20261022j"></script>
+  <script src="assets/data/works.js?v=20261022k"></script>
+  <script src="admin.js?v=20261022k"></script>
+  <script src="admin-gallery.js?v=20261022k"></script>
+  <script src="admin-promo.js?v=20261022k"></script>
 </body>
 </html>

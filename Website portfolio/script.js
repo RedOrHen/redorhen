@@ -1103,6 +1103,66 @@
   }
 
   if (page === 'home') heroIntro();
+  if (page === 'listino') listinoPromos();
+
+  /* ---------------------------------------------------------------
+     LISTINO: sconti a tempo impostati nell'area admin (tabella promotions)
+     --------------------------------------------------------------- */
+  async function loadPromos() {
+    if (new URLSearchParams(location.search).has('demo')) {
+      try { return (JSON.parse(localStorage.getItem('ro-promo-demo')) || []).filter((p) => p.active); } catch (e) { return []; }
+    }
+    if (!DB.supabaseUrl || !DB.supabaseAnonKey) return [];
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3500);
+    try {
+      const headers = { apikey: DB.supabaseAnonKey };
+      if (DB.supabaseAnonKey.startsWith('eyJ')) headers.Authorization = `Bearer ${DB.supabaseAnonKey}`;
+      const res = await fetch(`${DB.supabaseUrl}/rest/v1/promotions?select=label,kind,amount,starts_on,ends_on,plans&active=eq.true`, { headers, signal: ctrl.signal });
+      return res.ok ? await res.json() : [];
+    } catch (e) {
+      return []; // nessuno sconto se Supabase non risponde: restano i prezzi pieni
+    } finally { clearTimeout(timer); }
+  }
+
+  async function listinoPromos() {
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const promos = (await loadPromos()).filter((p) => p.amount > 0 && p.starts_on <= today && today <= p.ends_on);
+    if (!promos.length) return;
+    const euro = (n) => `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')} €`;
+    const cut = (price, p) => Math.max(0, Math.round((p.kind === 'percent' ? price * (1 - p.amount / 100) : price - p.amount) * 100) / 100);
+    const off = (p) => (p.kind === 'percent' ? `−${+p.amount}%` : `−${euro(+p.amount)}`);
+    const names = {};
+    const used = new Set();
+    $$('.plan[data-plan]').forEach((plan) => {
+      const key = plan.dataset.plan;
+      names[key] = plan.querySelector('h2').textContent.replace(/^\s*LV\.\d\s*/, '').trim();
+      const prices = $$('[data-price]', plan);
+      if (!prices.length) return;
+      // con più sconti nello stesso giorno vale quello più conveniente per il pacchetto
+      const base = +prices[0].dataset.price;
+      const best = promos.filter((p) => (p.plans || []).includes(key)).sort((a, b) => cut(base, a) - cut(base, b))[0];
+      if (!best) return;
+      used.add(best);
+      prices.forEach((el) => {
+        const price = +el.dataset.price;
+        el.innerHTML = `<s class="price-old"><span class="sr-only">prezzo pieno </span>${euro(price)}</s> <span class="price-new"><span class="sr-only">scontato a </span>${euro(cut(price, best))}</span>`;
+      });
+      plan.classList.add('is-promo');
+      plan.querySelector('.plan-price').insertAdjacentHTML('afterend', `<span class="plan-promo pixel">Sconto ${esc(off(best))}</span>`);
+    });
+    const banner = $('#promo-banner');
+    if (!banner || !used.size) return;
+    const all = Object.keys(names);
+    banner.innerHTML = [...used].map((p) => {
+      const plans = (p.plans || []).filter((k) => names[k]);
+      const which = plans.length === all.length ? 'su tutti i pacchetti' : `su ${plans.map((k) => names[k]).join(' e ')}`;
+      const until = new Date(`${p.ends_on}T12:00:00`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+      return `<span>▲ ${p.label ? `${esc(p.label)}: ` : ''}sconto ${esc(off(p))} ${esc(which)}, fino al ${esc(until)}</span>`;
+    }).join('');
+    banner.hidden = false;
+  }
 
   (async () => {
   if (page === 'home' || page === 'lavori') {

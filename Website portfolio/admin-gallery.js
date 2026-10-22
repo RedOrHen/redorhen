@@ -482,10 +482,10 @@
       b.classList.toggle('is-active', on);
       b.setAttribute('aria-pressed', String(on));
     });
-    $('#tab-calendar').hidden = tab !== 'calendar';
-    $('#tab-gallery').hidden = tab !== 'gallery';
+    $$('[id^="tab-"]').forEach((el) => { el.hidden = el.id !== `tab-${tab}`; });
     try { localStorage.setItem('ro-admin-tab', tab); } catch (e) { /* facoltativo */ }
     if (tab === 'gallery' && store && !loaded) load();
+    window.dispatchEvent(new CustomEvent('ro-admin-tab', { detail: tab }));
   }
   $$('[data-tab]').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
 

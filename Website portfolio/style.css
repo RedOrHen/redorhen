@@ -750,6 +750,19 @@ main { display: block; }
 .plan-desc { color: var(--dust); font-size: 17px; }
 @media (max-width: 960px) { .plans { grid-template-columns: 1fr; } }
 
+/* Sconti a tempo (area admin → Sconti) */
+.promo-banner {
+  display: grid; gap: 6px; margin: 0 var(--gutter) clamp(28px, 4vh, 44px);
+  padding: 14px 18px; font-size: 13px; line-height: 1.6; letter-spacing: .04em;
+  color: var(--ink); background: var(--amber);
+}
+.promo-banner[hidden] { display: none; }
+.plan-promo { align-self: flex-start; margin-top: -12px; padding: 6px 10px; background: var(--amber); color: var(--ink); }
+.plan [data-price] { white-space: nowrap; }
+.price-old { font-size: .5em; color: var(--dust); text-decoration-thickness: 3px; margin-right: .15em; vertical-align: .2em; }
+.plan li .price-old { font-size: 1em; text-decoration-thickness: 2px; vertical-align: 0; }
+.plan li .price-new { color: var(--cream); font-weight: 700; }
+
 .extras { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 96px); }
 .extras-list { display: grid; }
 .extras-list li {
