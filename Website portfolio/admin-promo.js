@@ -1,6 +1,6 @@
 /* =====================================================================
-   RedOrHen — Area admin: sconti a tempo sui pacchetti del Listino
-   Supabase (tabella promotions) oppure modalità demo nel localStorage.
+   RedOrHen — Area admin, scheda Listino: prezzi e sconti a tempo
+   Supabase (tabelle price_items e promotions) oppure modalità demo nel localStorage.
    Si attiva dopo il login (evento ro-admin-ready).
    ===================================================================== */
 (() => {
@@ -10,12 +10,18 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const DEMO_KEY = 'ro-promo-demo';
+  const PRICES_DEMO_KEY = 'ro-prices-demo';
 
-  // Prezzi pieni del Listino, usati per l'esempio nel modulo
+  // Prezzi del Listino: questi sono quelli di partenza, sostituiti da quelli salvati
+  const PRICES = {
+    lv1: { price: 50 }, lv2: { price: 150 }, lv3_2: { price: 60 }, lv3_3: { price: 80 },
+    extra_foto: { price: 5, suffix: '/ foto' }, extra_trasferta: { price: 0 }, extra_evento: { price: 15, suffix: '· 3 foto' }
+  };
+  // Pacchetti per l'esempio degli sconti (il Boss Fight parte dal prezzo più basso)
   const PLANS = {
-    lv1: { name: 'Side Quest', price: 50 },
-    lv2: { name: 'Main Quest', price: 150 },
-    lv3: { name: 'Boss Fight', price: 60 }
+    lv1: { name: 'Side Quest', get price() { return PRICES.lv1.price ?? 0; } },
+    lv2: { name: 'Main Quest', get price() { return PRICES.lv2.price ?? 0; } },
+    lv3: { name: 'Boss Fight', get price() { return Math.min(PRICES.lv3_2.price ?? 0, PRICES.lv3_3.price ?? 0); } }
   };
 
   const pad = (n) => String(n).padStart(2, '0');
@@ -68,8 +74,26 @@
     async remove(p) { this.write(this.read().filter((r) => r.id !== p.id)); }
   };
 
+  const PriceRemote = (sb) => ({
+    async list() {
+      const { data, error } = await sb.from('price_items').select('key,price,suffix');
+      if (error) throw error;
+      return data;
+    },
+    async save(rows) {
+      const { error } = await sb.from('price_items').upsert(rows, { onConflict: 'key' });
+      if (error) throw error;
+    }
+  });
+  const PriceLocal = {
+    async list() { try { return JSON.parse(localStorage.getItem(PRICES_DEMO_KEY)) || []; } catch (e) { return []; } },
+    async save(rows) { localStorage.setItem(PRICES_DEMO_KEY, JSON.stringify(rows)); }
+  };
+  let priceStore = null;
+
   const errText = (e) => {
     const m = (e && (e.message || e.code)) || '';
+    if (/price_items/i.test(m)) return 'Manca la tabella dei prezzi: esegui supabase/prezzi.sql in Supabase';
     if (/promotions|relation|does not exist|schema cache|PGRST205|42P01/i.test(m)) return 'Manca la tabella degli sconti: esegui supabase/sconti.sql in Supabase';
     if (/fetch|network/i.test(m)) return 'Connessione assente: riprova';
     if (/row-level|policy|JWT|auth/i.test(m)) return 'Permesso negato: accedi di nuovo';
@@ -235,17 +259,82 @@
     } finally { btn.disabled = false; }
   });
 
+  /* ---------- Prezzi ---------- */
+  const prForm = $('#pr-form');
+  const prErr = $('.ev-error', prForm);
+  const prState = $('.pr-state', prForm);
+  const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) ? Math.round(n * 100) / 100 : null; };
+
+  function fillPrices() {
+    Object.entries(PRICES).forEach(([key, v]) => {
+      const inp = prForm.elements[key];
+      if (inp) inp.value = v.price ?? '';
+      const suf = prForm.elements[`${key}__suffix`];
+      if (suf) suf.value = v.suffix || '';
+    });
+    prState.textContent = '';
+  }
+
+  async function loadPrices() {
+    if (!priceStore) return;
+    prForm.classList.add('loading');
+    try {
+      (await priceStore.list()).forEach((r) => {
+        if (PRICES[r.key]) PRICES[r.key] = { price: r.price == null ? null : +r.price, suffix: r.suffix || '' };
+      });
+      prErr.textContent = '';
+    } catch (e) {
+      console.warn(e);
+      prErr.textContent = errText(e);
+    } finally {
+      prForm.classList.remove('loading');
+      fillPrices();
+      example();
+    }
+  }
+
+  prForm.addEventListener('input', () => { prState.textContent = 'Modifiche non salvate'; });
+  prForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    prErr.textContent = '';
+    const rows = [];
+    for (const key of Object.keys(PRICES)) {
+      const inp = prForm.elements[key];
+      const raw = String(inp.value).trim();
+      const price = raw === '' ? null : num(raw);
+      const isPlan = !key.startsWith('extra_');
+      if ((raw !== '' && price == null) || (price != null && price < 0)) { prErr.textContent = 'Controlla i prezzi: solo numeri da 0 in su'; inp.focus(); return; }
+      if (isPlan && price == null) { prErr.textContent = 'I prezzi dei pacchetti non possono restare vuoti'; inp.focus(); return; }
+      const suf = prForm.elements[`${key}__suffix`];
+      rows.push({ key, price, suffix: suf ? suf.value.trim() || null : null });
+    }
+    const btn = $('#pr-save');
+    btn.disabled = true;
+    try {
+      await priceStore.save(rows);
+      rows.forEach((r) => { PRICES[r.key] = { price: r.price, suffix: r.suffix || '' }; });
+      prState.textContent = 'Salvati ★';
+      toast('Prezzi salvati ★');
+      example();
+    } catch (x) {
+      console.warn(x);
+      prErr.textContent = errText(x);
+    } finally { btn.disabled = false; }
+  });
+
   /* ---------- Avvio ---------- */
   function init(detail) {
     const { sb, toast: t } = detail || {};
     if (t) toast = t;
     store = sb ? RemoteStore(sb) : LocalStore;
+    priceStore = sb ? PriceRemote(sb) : PriceLocal;
     $('#p-preview').href = sb ? 'listino.html' : 'listino.html?demo';
     loaded = false;
     reset();
-    if (!$('#tab-promo').hidden) load();
+    fillPrices();
+    if (!$('#tab-promo').hidden) { load(); loadPrices(); }
   }
-  window.addEventListener('ro-admin-tab', (e) => { if (e.detail === 'promo' && store && !loaded) load(); });
+  window.addEventListener('ro-admin-tab', (e) => { if (e.detail === 'promo' && store && !loaded) { load(); loadPrices(); } });
   window.addEventListener('ro-admin-ready', (e) => init(e.detail));
   if (window.RO_ADMIN) init(window.RO_ADMIN);
   window.addEventListener('ro-admin-logout', () => { promos = []; loaded = false; list.innerHTML = ''; });

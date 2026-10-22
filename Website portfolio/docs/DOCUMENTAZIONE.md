@@ -67,7 +67,7 @@ Website portfolio/
 ├─ admin.css        stile dell'area admin
 ├─ admin.js         login Supabase e calendario
 ├─ admin-gallery.js editor dei set (scheda Lavori dell'area admin)
-├─ admin-promo.js   sconti a tempo (scheda Sconti dell'area admin)
+├─ admin-promo.js   prezzi e sconti a tempo (scheda Listino dell'area admin)
 ├─ assets/
 │  ├─ data/works.js         contatti del sito + set di riserva (vedi §4)
 │  ├─ data/admin-config.js  indirizzo e chiave pubblica di Supabase
@@ -161,7 +161,16 @@ Il browser resta collegato finché non si preme **Esci**.
 - **Importa da works.js**: copia su Supabase i set con foto vere presenti in `works.js`.
 - **Vedi la pagina ↗** apre la pagina Lavori.
 
-### Sconti a tempo (scheda Sconti)
+### Prezzi e sconti (scheda Listino)
+
+**Prezzi.** In alto ci sono i prezzi dei pacchetti (LV.1, LV.2, Boss Fight per 2 e per 3 persone) e degli extra.
+Si cambiano i numeri e si preme **Salva prezzi**: il Listino si aggiorna subito, senza push.
+- Il prezzo "da" del Boss Fight è calcolato da solo: il più basso tra 2 e 3 persone.
+- Negli extra il testo a destra viene scritto dopo il prezzo (es. "/ foto"); un prezzo vuoto mostra "Da concordare".
+- Serve la tabella `price_items`: si crea una volta eseguendo `supabase/prezzi.sql` (contiene già i prezzi di partenza).
+  Se Supabase non risponde, il Listino mostra i prezzi scritti in `listino.html`.
+
+**Sconti.** Sotto i prezzi, nella stessa scheda:
 
 - Il modulo chiede: nome facoltativo (es. "Promo Halloween", si vede nel Listino), valore dello sconto in **%** o in **€**,
   primo e ultimo giorno (compresi), pacchetti a cui si applica (LV.1, LV.2, LV.3) e se è attivo.
@@ -172,8 +181,7 @@ Il browser resta collegato finché non si preme **Esci**.
 - Nella lista: **Modifica**, **Attiva/Disattiva** (lo sconto resta salvato ma non si vede), **Elimina**.
   Lo stato indica Attivo ora, Programmato, Scaduto o Disattivato.
 - Serve la tabella `promotions`: si crea una volta eseguendo `supabase/sconti.sql` nell'SQL Editor di Supabase.
-- I prezzi pieni sono scritti in `listino.html` (attributo `data-price`): se cambiano, aggiornare anche `PLANS` in `admin-promo.js`
-  (serve solo per l'esempio nel modulo).
+- Lo sconto si calcola sui prezzi salvati nella parte Prezzi.
 
 ---
 
@@ -216,6 +224,7 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
 |---|---|---|---|
 | tabella `appointments` | appuntamenti del calendario | solo il proprietario, dopo il login | solo il proprietario |
 | tabella `gallery_sets` | set della galleria (testi, ordine, elenco foto, scelte Hero/Contatti) | i set pubblicati e quelli con la foto Hero/Contatti; le altre bozze solo il proprietario | solo il proprietario |
+| tabella `price_items` | prezzi di pacchetti ed extra del Listino | tutti (servono al sito) | solo il proprietario |
 | tabella `promotions` | sconti a tempo del Listino | gli sconti attivi nel periodo; tutti solo il proprietario | solo il proprietario |
 | spazio file `gallery` | foto originali e anteprime | tutti (servono al sito) | solo il proprietario |
 
@@ -264,4 +273,4 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
   - Visualizzatore più grande; zoom a tutto schermo su telefono e desktop; comandi nascosti da ingrandita.
   - Scelta della foto della Home e della pagina Contatti dall'area admin (interruttori Hero / Contatti).
   - Seconda revisione: pilastri della Home con foto, filtri di Lavori in una riga su telefono, meno spazi vuoti.
-  - Extra del Listino aggiornati; sconti a tempo impostabili dall'area admin (scheda Sconti).
+  - Extra del Listino aggiornati; prezzi e sconti a tempo modificabili dall'area admin (scheda Listino).

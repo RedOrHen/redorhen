@@ -1125,10 +1125,50 @@
     } finally { clearTimeout(timer); }
   }
 
+  // Prezzi modificati dall'area admin (tabella price_items); senza risposta restano quelli scritti nella pagina
+  async function loadPrices() {
+    if (new URLSearchParams(location.search).has('demo')) {
+      try { return JSON.parse(localStorage.getItem('ro-prices-demo')) || []; } catch (e) { return []; }
+    }
+    if (!DB.supabaseUrl || !DB.supabaseAnonKey) return [];
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3500);
+    try {
+      const headers = { apikey: DB.supabaseAnonKey };
+      if (DB.supabaseAnonKey.startsWith('eyJ')) headers.Authorization = `Bearer ${DB.supabaseAnonKey}`;
+      const res = await fetch(`${DB.supabaseUrl}/rest/v1/price_items?select=key,price,suffix`, { headers, signal: ctrl.signal });
+      return res.ok ? await res.json() : [];
+    } catch (e) {
+      return [];
+    } finally { clearTimeout(timer); }
+  }
+
+  function applyPrices(rows) {
+    const euro = (n) => `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')} €`;
+    const map = {};
+    rows.forEach((r) => { map[r.key] = { price: r.price == null ? null : +r.price, suffix: r.suffix || '' }; });
+    // il "da" del Boss Fight è il più basso dei prezzi di gruppo
+    const group = ['lv3_2', 'lv3_3'].map((k) => map[k] && map[k].price).filter((n) => n != null);
+    if (group.length) map.lv3_from = { price: Math.min(...group) };
+    $$('[data-key]').forEach((el) => {
+      const v = map[el.dataset.key];
+      if (!v) return;
+      if (el.hasAttribute('data-price')) {
+        if (v.price == null) return;
+        el.dataset.price = String(v.price);
+        el.textContent = euro(v.price);
+      } else {
+        el.textContent = v.price == null ? 'Da concordare' : `${euro(v.price)}${v.suffix ? ` ${v.suffix}` : ''}`;
+      }
+    });
+  }
+
   async function listinoPromos() {
+    const [prices, promoRows] = await Promise.all([loadPrices(), loadPromos()]);
+    if (prices.length) applyPrices(prices);
     const d = new Date();
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const promos = (await loadPromos()).filter((p) => p.amount > 0 && p.starts_on <= today && today <= p.ends_on);
+    const promos = promoRows.filter((p) => p.amount > 0 && p.starts_on <= today && today <= p.ends_on);
     if (!promos.length) return;
     const euro = (n) => `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')} €`;
     const cut = (price, p) => Math.max(0, Math.round((p.kind === 'percent' ? price * (1 - p.amount / 100) : price - p.amount) * 100) / 100);

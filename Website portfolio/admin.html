@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=20261022k">
-  <link rel="stylesheet" href="admin.css?v=20261022k">
+  <link rel="stylesheet" href="style.css?v=20261022l">
+  <link rel="stylesheet" href="admin.css?v=20261022l">
 </head>
 <body class="admin">
 
@@ -40,7 +40,7 @@
       <nav class="admin-tabs" aria-label="Sezioni admin">
         <button class="btn-sm is-active" type="button" data-tab="calendar" aria-pressed="true">Calendario</button>
         <button class="btn-sm" type="button" data-tab="gallery" aria-pressed="false">Lavori</button>
-        <button class="btn-sm" type="button" data-tab="promo" aria-pressed="false">Sconti</button>
+        <button class="btn-sm" type="button" data-tab="promo" aria-pressed="false">Listino</button>
       </nav>
       <div class="admin-user">
         <span class="pixel muted" id="user-email"></span>
@@ -66,17 +66,68 @@
     </section>
 
     <!-- SCONTI -->
-    <section class="g-shell p-shell" id="tab-promo" hidden aria-label="Sconti">
+    <section class="g-shell p-shell" id="tab-promo" hidden aria-label="Listino: prezzi e sconti">
       <div class="cal-toolbar">
-        <h1 class="cal-title">Sconti</h1>
+        <h1 class="cal-title">Listino</h1>
         <div class="cal-actions">
           <a class="btn-sm" id="p-preview" href="listino.html" target="_blank" rel="noopener">Vedi il Listino ↗</a>
         </div>
       </div>
+      <form class="side-box pr-form" id="pr-form" novalidate>
+        <h2>Prezzi</h2>
+        <div class="pr-cols">
+          <fieldset class="pr-group">
+            <legend class="pixel">Pacchetti</legend>
+            <div class="pr-row">
+              <label class="pr-name" for="pr-lv1">LV.1 Side Quest</label>
+              <span class="pr-input"><input id="pr-lv1" name="lv1" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+            </div>
+            <div class="pr-row">
+              <label class="pr-name" for="pr-lv2">LV.2 Main Quest</label>
+              <span class="pr-input"><input id="pr-lv2" name="lv2" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+            </div>
+            <div class="pr-row">
+              <label class="pr-name" for="pr-lv3_2">LV.3 Boss Fight · 2 persone</label>
+              <span class="pr-input"><input id="pr-lv3_2" name="lv3_2" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+            </div>
+            <div class="pr-row">
+              <label class="pr-name" for="pr-lv3_3">LV.3 Boss Fight · 3 persone</label>
+              <span class="pr-input"><input id="pr-lv3_3" name="lv3_3" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+            </div>
+            <p class="g-note">Il prezzo "da" del Boss Fight è il più basso dei due.</p>
+          </fieldset>
+          <fieldset class="pr-group pr-group--extra">
+            <legend class="pixel">Extra</legend>
+            <div class="pr-row">
+              <label class="pr-name" for="pr-extra_foto">Foto ritoccate aggiuntive</label>
+              <span class="pr-input"><input id="pr-extra_foto" name="extra_foto" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+              <input class="pr-suffix" name="extra_foto__suffix" type="text" maxlength="40" aria-label="Testo dopo il prezzo: Foto ritoccate aggiuntive" placeholder="es. / foto">
+            </div>
+            <div class="pr-row">
+              <label class="pr-name" for="pr-extra_trasferta">Trasferta fuori zona</label>
+              <span class="pr-input"><input id="pr-extra_trasferta" name="extra_trasferta" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+              <input class="pr-suffix" name="extra_trasferta__suffix" type="text" maxlength="40" aria-label="Testo dopo il prezzo: Trasferta fuori zona" placeholder="es. / foto">
+            </div>
+            <div class="pr-row">
+              <label class="pr-name" for="pr-extra_evento">Shooting durante un evento</label>
+              <span class="pr-input"><input id="pr-extra_evento" name="extra_evento" type="number" min="0" max="99999" step="0.5" inputmode="decimal"><i aria-hidden="true">€</i></span>
+              <input class="pr-suffix" name="extra_evento__suffix" type="text" maxlength="40" aria-label="Testo dopo il prezzo: Shooting durante un evento" placeholder="es. / foto">
+            </div>
+            <p class="g-note">Prezzo vuoto = nel Listino compare "Da concordare". Il testo a destra si aggiunge dopo il prezzo.</p>
+          </fieldset>
+        </div>
+        <p class="ev-error" role="alert"></p>
+        <div class="ev-actions">
+          <span class="pixel muted pr-state" aria-live="polite"></span>
+          <button class="btn" type="submit" id="pr-save">Salva prezzi</button>
+        </div>
+      </form>
+
+      <h2 class="p-list-title p-section-title">Sconti</h2>
       <p class="g-hint">Scegli lo sconto, il periodo e i pacchetti: dal primo all'ultimo giorno compresi il Listino mostra il prezzo barrato e quello scontato. Gli extra non vengono scontati. Se più sconti valgono nello stesso giorno, per ogni pacchetto si applica quello più conveniente.</p>
       <div class="p-layout">
         <form class="side-box p-form" id="p-form" novalidate>
-          <h2 id="p-title">Nuovo sconto</h2>
+          <h3 id="p-title">Nuovo sconto</h3>
           <label class="a-field">
             <span>Nome (facoltativo, si vede nel Listino)</span>
             <input name="label" type="text" maxlength="120" placeholder="es. Promo Halloween">
@@ -119,7 +170,7 @@
           </div>
         </form>
         <div class="p-list-wrap">
-          <h2 class="p-list-title">Sconti salvati</h2>
+          <h3 class="p-list-title">Sconti salvati</h3>
           <div class="p-list" id="p-list"></div>
         </div>
       </div>
@@ -270,11 +321,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/data/admin-config.js?v=20261022k"></script>
+  <script src="assets/data/admin-config.js?v=20261022l"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="assets/data/works.js?v=20261022k"></script>
-  <script src="admin.js?v=20261022k"></script>
-  <script src="admin-gallery.js?v=20261022k"></script>
-  <script src="admin-promo.js?v=20261022k"></script>
+  <script src="assets/data/works.js?v=20261022l"></script>
+  <script src="admin.js?v=20261022l"></script>
+  <script src="admin-gallery.js?v=20261022l"></script>
+  <script src="admin-promo.js?v=20261022l"></script>
 </body>
 </html>

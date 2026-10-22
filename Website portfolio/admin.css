@@ -384,3 +384,29 @@ body.admin::after { display: none; }
 .p-when { color: var(--cream); font-size: 15px; }
 .p-plans { color: var(--dust); font-size: 13px; }
 @media (max-width: 900px) { .p-layout { grid-template-columns: 1fr; } }
+
+/* ---------- Listino: prezzi ---------- */
+.pr-form { gap: 18px; }
+.pr-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; }
+.pr-group { display: grid; gap: 10px; align-content: start; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pr-group legend { margin-bottom: 6px; padding: 0; font-size: 12px; letter-spacing: .08em; color: var(--dust); }
+.pr-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 10px; align-items: center; }
+.pr-group--extra .pr-row { grid-template-columns: minmax(0, 1fr) 120px 120px; }
+.pr-name { font-size: 15px; }
+.pr-input { position: relative; display: block; }
+.pr-input input, .pr-suffix {
+  width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; font-size: 16px;
+  background: var(--ink); color: var(--cream); border: 0; box-shadow: inset 0 0 0 2px var(--line);
+}
+.pr-input input { padding-right: 32px; text-align: right; font-weight: 700; }
+.pr-input i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-style: normal; color: var(--dust); pointer-events: none; }
+.pr-input input:focus, .pr-suffix:focus { outline: none; box-shadow: inset 0 0 0 2px var(--ember); }
+.pr-form .ev-actions { justify-content: flex-end; }
+.pr-state { font-size: 12px; }
+.p-section-title { margin-top: 20px; }
+.p-form h3 { font-family: var(--f-display); font-weight: 400; font-size: 28px; line-height: 1; text-transform: uppercase; }
+@media (max-width: 1000px) { .pr-cols { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .pr-row, .pr-group--extra .pr-row { grid-template-columns: minmax(0, 1fr) 104px; }
+  .pr-suffix { grid-column: 2; }
+}
