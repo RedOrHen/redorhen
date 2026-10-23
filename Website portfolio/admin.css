@@ -329,14 +329,15 @@ body.admin::after { display: none; }
 .g-photo figcaption button:disabled { opacity: .25; pointer-events: none; }
 .g-photo figcaption [data-p="del"]:hover { background: #ff4d2e; }
 
-/* Ordine delle foto col trascinamento (mouse e touch) */
-.g-photo { cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.g-photo img { pointer-events: none; }
+/* Ordine delle foto e dei set col trascinamento (mouse e touch) */
+.g-photo, .g-list.is-sortable .g-card { cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.g-list.is-sortable .g-cover { cursor: grab; }
+.g-photo img, .g-cover img { pointer-events: none; }
 .g-photo:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-.g-photos.is-sorting, .g-photos.is-sorting .g-photo { cursor: grabbing; }
-.g-photo.is-dragging { opacity: .3; }
+.is-sorting, .is-sorting .g-photo, .is-sorting .g-card, .is-sorting .g-cover { cursor: grabbing; }
+.g-photo.is-dragging, .g-card.is-dragging { opacity: .3; }
 .g-ghost {
-  position: fixed; z-index: 10; margin: 0; pointer-events: none; cursor: grabbing;
+  position: fixed; z-index: 1000; margin: 0; pointer-events: none; cursor: grabbing;
   scale: 1.04; rotate: 2deg; opacity: .92;
   box-shadow: 0 0 0 2px var(--ember), 8px 8px 0 var(--rust);
 }

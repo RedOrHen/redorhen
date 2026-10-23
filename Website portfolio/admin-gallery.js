@@ -89,7 +89,7 @@
   /* ---------- Trascinamento per riordinare ---------- */
   // Col mouse si trascina subito; col dito si tiene premuto un attimo, così lo scorrimento resta libero.
   // Gli elementi si spostano nel DOM mentre si trascina; al rilascio onDrop riceve gli elementi nel nuovo ordine.
-  function sortable(box, itemSel, onDrop) {
+  function sortable(box, itemSel, onDrop, { ignore = 'button, a, input', enabled = () => true } = {}) {
     const HOLD = 250, SLOP = 8, EDGE = 60;
     let pend = null, drag = null, swallowClick = false;
 
@@ -157,7 +157,7 @@
     }
 
     box.addEventListener('pointerdown', (e) => {
-      if (drag || e.button !== 0 || e.target.closest('button, a, input')) return;
+      if (drag || e.button !== 0 || e.target.closest(ignore) || !enabled()) return;
       const item = e.target.closest(itemSel);
       if (!item || !box.contains(item)) return;
       pend = { item, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse' };
@@ -349,8 +349,10 @@
   };
   const fillList = (id, values) => { $(id).innerHTML = values.map((v) => `<option value="${esc(v)}">`).join(''); };
   let yearFilter = '';
+  let setSort = null;      // trascinamento dei set (creato più sotto)
 
   function render() {
+    setSort?.cancel();
     fillList('#g-cats', known('category'));
     fillList('#g-chars', known('character'));
     fillList('#g-series', known('series'));
@@ -372,7 +374,8 @@
       </div>`;
       return;
     }
-    list.innerHTML = sets.map((s, i) => {
+    list.classList.toggle('is-sortable', !yearFilter);
+    list.innerHTML = sets.map((s) => {
       const cover = s.photos[0];
       const hero = s.photos.some((p) => p.hero), contact = s.photos.some((p) => p.contact);
       // Non pubblicato: non compare nei Lavori; se ha la foto Hero/Contatti quella si vede comunque
@@ -382,8 +385,8 @@
         : [hero && 'Hero', contact && 'Contatti', s.photos.some((p) => p.story) && 'Storia', s.photos.some((p) => p.rule) && 'Regole', s.featured && '★ Home', /natal/i.test(s.category || '') && 'Natale: 1 nov–6 gen'].filter(Boolean);
       const hide = yearFilter && (yearFilter === 'none' ? !!s.year : String(s.year) !== yearFilter);
       return `<article class="g-card${s.published === false ? ' is-draft' : ''}" data-id="${esc(s.id)}"${hide ? ' hidden' : ''}>
-        <button class="g-cover" type="button" data-act="edit" aria-label="Modifica ${esc(s.character)}">
-          ${cover ? `<img src="${esc(publicUrl(cover))}" alt="" loading="lazy" decoding="async">` : '<span class="g-nophoto pixel">Nessuna foto</span>'}
+        <button class="g-cover" type="button" data-act="edit" aria-label="Modifica ${esc(s.character)}${yearFilter ? '' : ' (frecce ← → per spostarlo)'}">
+          ${cover ? `<img src="${esc(publicUrl(cover))}" alt="" loading="lazy" decoding="async" draggable="false">` : '<span class="g-nophoto pixel">Nessuna foto</span>'}
           <span class="g-badge pixel">${s.photos.length} foto</span>
           ${flags.length ? `<span class="g-flags pixel">${flags.map(esc).join(' · ')}</span>` : ''}
         </button>
@@ -393,8 +396,6 @@
           ${s.fair || s.year ? `<span class="g-when">${esc([s.fair, s.year].filter(Boolean).join(' · '))}</span>` : ''}
         </div>
         <div class="g-actions">
-          <button class="btn-sm icon" type="button" data-act="up" aria-label="Sposta prima" ${i === 0 || yearFilter ? 'disabled' : ''}>▲</button>
-          <button class="btn-sm icon" type="button" data-act="down" aria-label="Sposta dopo" ${i === sets.length - 1 || yearFilter ? 'disabled' : ''}>▼</button>
           <button class="btn-sm" type="button" data-act="edit">Modifica</button>
           <button class="btn-sm btn-danger" type="button" data-act="del" aria-label="Elimina ${esc(s.character)}">✕</button>
         </div>
@@ -402,11 +403,9 @@
     }).join('');
   }
 
-  async function move(id, dir) {
-    const i = sets.findIndex((s) => s.id === id);
-    const j = i + dir;
-    if (i < 0 || j < 0 || j >= sets.length) return;
-    [sets[i], sets[j]] = [sets[j], sets[i]];
+  // Ordine dei set: trascinamento della scheda (col dito tenendo premuto un attimo), oppure frecce ← → sulla copertina.
+  // Con un anno scelto nel filtro l'ordine non si cambia: i set nascosti finirebbero in posizioni impreviste.
+  async function saveOrder() {
     const changed = [];
     sets.forEach((s, k) => { if (s.position !== k) { s.position = k; changed.push(s); } });
     render();
@@ -434,9 +433,24 @@
     const s = sets.find((x) => x.id === card.dataset.id);
     if (!s) return;
     if (b.dataset.act === 'edit') openEditor(s);
-    if (b.dataset.act === 'up') move(s.id, -1);
-    if (b.dataset.act === 'down') move(s.id, 1);
     if (b.dataset.act === 'del') removeSet(s);
+  });
+
+  setSort = sortable(list, '.g-card', (els) => {
+    const byId = new Map(sets.map((s) => [s.id, s]));
+    sets = els.map((el) => byId.get(el.dataset.id));
+    saveOrder();
+  }, { ignore: '.g-actions, input', enabled: () => !yearFilter });
+
+  list.addEventListener('keydown', (e) => {
+    if (yearFilter || !e.target.matches('.g-cover') || !/^Arrow(Left|Right|Up|Down)$/.test(e.key)) return;
+    e.preventDefault();
+    const id = e.target.closest('.g-card').dataset.id;
+    const i = sets.findIndex((s) => s.id === id), j = i + (/Left|Up/.test(e.key) ? -1 : 1);
+    if (i < 0 || j < 0 || j >= sets.length) return;
+    [sets[i], sets[j]] = [sets[j], sets[i]];
+    saveOrder();
+    list.querySelector(`.g-card[data-id="${CSS.escape(id)}"] .g-cover`)?.focus();
   });
 
   /* ---------- Editor ---------- */

@@ -172,7 +172,7 @@ Il browser resta collegato finché non si preme **Esci**.
 - **Set natalizi**: se la categoria contiene "Natal" (Natale, Natalizio, Natalizia), il set compare sul sito solo dal
   1° novembre al 6 gennaio compresi (galleria, filtri, Home e foto Hero/Contatti). Nell'area admin resta sempre visibile,
   con l'etichetta "Natale: 1 nov–6 gen".
-- Il menu **Tutti gli anni** in alto mostra solo i set di un anno (o quelli senza anno); con un anno scelto ▲ ▼ sono disattivati.
+- Il menu **Tutti gli anni** in alto mostra solo i set di un anno (o quelli senza anno); con un anno scelto l'ordine dei set non si può cambiare.
 - Anno e fiera richiedono le colonne `year` e `fair`: si creano una volta eseguendo `supabase/anno-fiera.sql`.
 - **Foto**: si trascinano nel riquadro o si scelgono dal computer (JPG, PNG, WebP).
   - di qualsiasi peso: il browser le riduce a **4000 px** sul lato lungo (le più piccole restano come sono) e le salva
@@ -192,7 +192,8 @@ Il browser resta collegato finché non si preme **Esci**.
   quella di prima perde l'impostazione automaticamente (anche se sta in un altro set).
   La foto può stare anche in un set **non pubblicato**: il set non compare nei Lavori (etichetta "Solo Hero" / "Solo Contatti"),
   ma la foto scelta viene mostrata lo stesso nella Home o nella pagina Contatti.
-- Nella lista: ▲ ▼ ordine dei set, **Modifica**, ✕ elimina (cancella anche le foto da Supabase).
+- Nella lista: **ordine dei set** trascinando le schede (col mouse subito, sul telefono tenendo premuto un attimo;
+  da tastiera frecce sulla copertina), salvato appena si rilascia; **Modifica**, ✕ elimina (cancella anche le foto da Supabase).
   Le etichette sulla copertina indicano Hero, Contatti, ★ Home, Bozza, oppure "Solo Hero" / "Solo Contatti" per i set non pubblicati usati solo per quelle foto.
 - **Importa da works.js**: copia su Supabase i set con foto vere presenti in `works.js`.
 - **Vedi la pagina ↗** apre la pagina Lavori.
@@ -320,4 +321,4 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
     facoltativo nel modulo, frasi neutre per genere.
   - Anteprima social: immagini dei meta tag con indirizzo completo (https://redorhen.github.io/redorhen/…) e descrizione
     propria per Lavori, Listino e Contatti.
-  - Ordine delle foto di un set col trascinamento (mouse e touch) al posto delle frecce ◀ ▶.
+  - Ordine delle foto di un set e ordine dei set col trascinamento (mouse e touch) al posto delle frecce ◀ ▶ e ▲ ▼.
