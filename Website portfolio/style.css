@@ -314,6 +314,38 @@ main { display: block; }
   display: flex; align-items: center; gap: 8px;
 }
 .rec i { width: 10px; height: 10px; background: #ff3b1a; }
+/* Dati di scatto come sul display della fotocamera (ISO, tempo, diaframma, focale) */
+.cam-data {
+  position: absolute; z-index: 3; top: 10px; right: 10px;
+  display: flex; gap: 12px; padding: 4px 8px;
+  background: rgba(18, 11, 7, .55); color: var(--cream);
+}
+/* Punto di messa a fuoco: cerca il fuoco e si blocca, poi ricomincia */
+.af {
+  position: absolute; z-index: 3; left: 50%; top: 42%; width: 64px; height: 48px; margin: -24px 0 0 -32px;
+  pointer-events: none; color: var(--amber);
+  background:
+    linear-gradient(currentColor, currentColor) top left / 14px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) top left / 2px 14px no-repeat,
+    linear-gradient(currentColor, currentColor) top right / 14px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) top right / 2px 14px no-repeat,
+    linear-gradient(currentColor, currentColor) bottom left / 14px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) bottom left / 2px 14px no-repeat,
+    linear-gradient(currentColor, currentColor) bottom right / 14px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) bottom right / 2px 14px no-repeat;
+  animation: af-lock 7s steps(1) infinite;
+}
+@keyframes af-lock {
+  0% { transform: scale(1.35); color: var(--amber); opacity: .9; }
+  4% { transform: scale(1.15); }
+  8% { transform: scale(1.25); }
+  12% { transform: scale(1); color: var(--cream); opacity: 1; }
+  16% { opacity: 0; }
+  19% { opacity: 1; }
+  70% { transform: scale(1); color: var(--cream); opacity: 1; }
+  100% { transform: scale(1); color: var(--cream); opacity: 0; }
+}
+@media (max-width: 520px) { .cam-focal { display: none; } .cam-data { gap: 8px; } }
 .frame-tag { position: absolute; z-index: 3; left: 14px; bottom: 14px; }
 
 .hero-content { position: relative; z-index: 2; display: grid; gap: 28px; }
