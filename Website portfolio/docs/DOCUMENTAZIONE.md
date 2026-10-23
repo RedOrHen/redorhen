@@ -127,6 +127,7 @@ Nell'editor dei set, sotto ogni foto, gli interruttori **Storia** e **Regole** s
 Se ne usano al massimo 3 per sezione, nell'ordine dei set e delle foto, e solo da set pubblicati.
 Se ne scegli meno di 3 (o nessuna), i posti rimasti li riempie il sito con le copertine dei primi set.
 Nella storia le cornici sono sempre verticali; nelle regole prendono le proporzioni della foto.
+Il titolo "Tre regole del gioco" sta su una riga da 761 px di larghezza in su; sul telefono va su due righe.
 
 ### Modulo contatti ed email di riepilogo
 
@@ -324,3 +325,4 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
   - Anteprima social: immagini dei meta tag con indirizzo completo (https://redorhen.github.io/redorhen/…) e descrizione
     propria per Lavori, Listino e Contatti.
   - Ordine delle foto di un set e ordine dei set col trascinamento (mouse e touch) al posto delle frecce ◀ ▶ e ▲ ▼.
+  - Titolo "Tre regole del gioco" della Home su una riga sola su computer e tablet (resta su due righe sul telefono).

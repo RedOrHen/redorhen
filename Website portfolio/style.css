@@ -413,6 +413,11 @@ main { display: block; }
 /* ---------- Pillars ---------- */
 
 .pillars-grid { display: grid; }
+/* titolo "Tre regole del gioco": su una riga da tablet in su, su due righe sul telefono */
+@media (min-width: 761px) {
+  .pillars .title { white-space: nowrap; }
+  .pillars .title .line { display: inline-block; vertical-align: top; }
+}
 .pillar {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr);
   gap: clamp(24px, 5vw, 96px); align-items: center;
