@@ -171,6 +171,8 @@ body::after {
 .cursor-dot {
   position: absolute; left: -6px; top: -6px; width: 12px; height: 12px;
   background: var(--ember);
+  /* bordo scuro: il cursore resta visibile anche sopra testi e sfondi arancioni */
+  box-shadow: 0 0 0 2px var(--ink);
   transition: transform .25s var(--ease), background .2s;
 }
 .cursor.is-link .cursor-dot { transform: scale(2.2); background: var(--amber); mix-blend-mode: normal; }
@@ -178,7 +180,7 @@ body::after {
   position: absolute; left: 14px; top: 10px;
   padding: 6px 9px; white-space: nowrap;
   font-family: var(--f-pixel); font-size: 13px; letter-spacing: .06em; text-transform: uppercase;
-  background: var(--ember); color: var(--ink);
+  background: var(--ember); color: var(--ink); box-shadow: 0 0 0 2px var(--ink);
   opacity: 0; transform: translateY(6px);
   transition: opacity .2s, transform .3s var(--ease);
 }
