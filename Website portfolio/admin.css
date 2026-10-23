@@ -329,6 +329,19 @@ body.admin::after { display: none; }
 .g-photo figcaption button:disabled { opacity: .25; pointer-events: none; }
 .g-photo figcaption [data-p="del"]:hover { background: #ff4d2e; }
 
+/* Ordine delle foto col trascinamento (mouse e touch) */
+.g-photo { cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.g-photo img { pointer-events: none; }
+.g-photo:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.g-photos.is-sorting, .g-photos.is-sorting .g-photo { cursor: grabbing; }
+.g-photo.is-dragging { opacity: .3; }
+.g-ghost {
+  position: fixed; z-index: 10; margin: 0; pointer-events: none; cursor: grabbing;
+  scale: 1.04; rotate: 2deg; opacity: .92;
+  box-shadow: 0 0 0 2px var(--ember), 8px 8px 0 var(--rust);
+}
+.g-sort-hint { color: var(--dust); font-size: 13px; }
+
 @media (max-width: 760px) {
   .admin-tabs { margin-left: 8px; }
   .admin-top .brand { font-size: 0; gap: 6px; }
@@ -425,3 +438,4 @@ body.admin::after { display: none; }
 .g-bar[hidden] { display: none; }
 .g-bar i { display: block; height: 100%; background: var(--ember); transform-origin: left; transform: scaleX(0); transition: transform .2s linear; }
 #g-batch:empty { display: none; }
+.g-sort-hint:has(+ .g-photos:empty) { display: none; }

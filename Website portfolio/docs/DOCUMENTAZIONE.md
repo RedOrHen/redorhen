@@ -184,7 +184,10 @@ Il browser resta collegato finché non si preme **Esci**.
   originali sul computer non vengono toccate. Durante la riduzione l'editor dei set non si apre: un salvataggio fatto
   nel frattempo annullerebbe la riduzione. Se una foto punta a un originale già cancellato ma la versione a 4000 px
   esiste, il pulsante la ricollega.
-- Sotto ogni foto: ◀ ▶ ordine, ★ copertina (la prima foto è la copertina), ✕ togli,
+- **Ordine delle foto**: si trascinano le foto nella griglia. Col mouse basta prenderle e spostarle; sul telefono si tiene
+  premuto un attimo e poi si sposta il dito (uno scorrimento veloce fa solo scorrere la finestra). Vicino al bordo
+  la finestra scorre da sola. Da tastiera: Tab fino alla foto e frecce ← →. L'ordine si salva con **Salva**.
+- Sotto ogni foto: ★ copertina (la prima foto è la copertina), ✕ togli,
   e gli interruttori **Hero** / **Contatti**: una sola foto per ciascuno in tutto il sito; scegliendone un'altra,
   quella di prima perde l'impostazione automaticamente (anche se sta in un altro set).
   La foto può stare anche in un set **non pubblicato**: il set non compare nei Lavori (etichetta "Solo Hero" / "Solo Contatti"),
@@ -317,3 +320,4 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
     facoltativo nel modulo, frasi neutre per genere.
   - Anteprima social: immagini dei meta tag con indirizzo completo (https://redorhen.github.io/redorhen/…) e descrizione
     propria per Lavori, Listino e Contatti.
+  - Ordine delle foto di un set col trascinamento (mouse e touch) al posto delle frecce ◀ ▶.

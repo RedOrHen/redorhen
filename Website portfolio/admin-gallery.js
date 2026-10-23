@@ -86,6 +86,100 @@
     el.setAttribute('aria-valuenow', String(Math.round(v * 100)));
   }
 
+  /* ---------- Trascinamento per riordinare ---------- */
+  // Col mouse si trascina subito; col dito si tiene premuto un attimo, così lo scorrimento resta libero.
+  // Gli elementi si spostano nel DOM mentre si trascina; al rilascio onDrop riceve gli elementi nel nuovo ordine.
+  function sortable(box, itemSel, onDrop) {
+    const HOLD = 250, SLOP = 8, EDGE = 60;
+    let pend = null, drag = null, swallowClick = false;
+
+    const scroller = () => box.closest('dialog') || document.scrollingElement;
+    const items = () => [...box.querySelectorAll(itemSel)];
+
+    function stopPending() {
+      if (pend) clearTimeout(pend.timer);
+      pend = null;
+    }
+
+    function start() {
+      const { item, x, y } = pend;
+      stopPending();
+      const r = item.getBoundingClientRect();
+      const ghost = item.cloneNode(true);
+      ghost.removeAttribute('data-i');
+      ghost.removeAttribute('tabindex');
+      ghost.className += ' g-ghost';
+      ghost.setAttribute('aria-hidden', 'true');
+      Object.assign(ghost.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+      (box.closest('dialog') || document.body).append(ghost);
+      item.classList.add('is-dragging');
+      box.classList.add('is-sorting');
+      navigator.vibrate?.(15);
+      drag = { item, ghost, x0: r.left, y0: r.top, dx: x - r.left, dy: y - r.top, x, y, before: items(), raf: 0 };
+      follow();
+      drag.raf = requestAnimationFrame(autoScroll);
+    }
+
+    function follow() {
+      const { item, ghost, x0, y0, dx, dy, x, y } = drag;
+      ghost.style.transform = `translate(${x - dx - x0}px, ${y - dy - y0}px)`;
+      const over = document.elementFromPoint(x, y)?.closest(itemSel);
+      if (!over || over === item || !box.contains(over)) return;
+      const list = items();
+      if (list.indexOf(item) < list.indexOf(over)) over.after(item); else over.before(item);
+    }
+
+    // Vicino al bordo alto o basso della finestra di modifica la lista scorre da sola
+    function autoScroll() {
+      if (!drag) return;
+      const sc = scroller();
+      const page = sc === document.scrollingElement;
+      const top = page ? 0 : sc.getBoundingClientRect().top;
+      const bottom = page ? innerHeight : sc.getBoundingClientRect().bottom;
+      const v = drag.y < top + EDGE ? drag.y - (top + EDGE) : drag.y > bottom - EDGE ? drag.y - (bottom - EDGE) : 0;
+      if (v) { sc.scrollTop += Math.max(-20, Math.min(20, v / 3)); follow(); }
+      drag.raf = requestAnimationFrame(autoScroll);
+    }
+
+    function finish(commit) {
+      stopPending();
+      if (!drag) return;
+      const { item, ghost, before, raf } = drag;
+      drag = null;
+      cancelAnimationFrame(raf);
+      ghost.remove();
+      item.classList.remove('is-dragging');
+      box.classList.remove('is-sorting');
+      swallowClick = true;
+      setTimeout(() => { swallowClick = false; }, 0);
+      const after = items();
+      if (commit && item.isConnected && after.some((el, k) => el !== before[k])) onDrop(after);
+    }
+
+    box.addEventListener('pointerdown', (e) => {
+      if (drag || e.button !== 0 || e.target.closest('button, a, input')) return;
+      const item = e.target.closest(itemSel);
+      if (!item || !box.contains(item)) return;
+      pend = { item, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse' };
+      if (pend.touch) pend.timer = setTimeout(start, HOLD);
+    });
+    addEventListener('pointermove', (e) => {
+      if (drag) { drag.x = e.clientX; drag.y = e.clientY; follow(); return; }
+      if (!pend || Math.hypot(e.clientX - pend.x, e.clientY - pend.y) <= SLOP) return;
+      if (pend.touch) stopPending();       // il dito si è mosso prima della pressione lunga: è uno scorrimento
+      else start();
+    });
+    addEventListener('pointerup', () => finish(true));
+    addEventListener('pointercancel', () => finish(true));
+    // Durante il trascinamento col dito la pagina non deve scorrere
+    box.addEventListener('touchmove', (e) => { if (drag) e.preventDefault(); }, { passive: false });
+    box.addEventListener('contextmenu', (e) => { if (pend || drag) e.preventDefault(); });
+    box.addEventListener('dragstart', (e) => e.preventDefault());
+    box.addEventListener('click', (e) => { if (swallowClick) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+    return { cancel: () => finish(false) };
+  }
+
   /* ---------- Storage ---------- */
   const cleanRow = (s) => ({
     id: s.id, character: s.character, series: s.series || null, category: s.category || null,
@@ -382,10 +476,11 @@
   }
 
   function renderPhotos() {
+    photoSort.cancel();
     $('.g-count', form).textContent = draft.photos.length ? `(${draft.photos.length})` : '';
     photosEl.innerHTML = draft.photos.map((p, i) => `
-      <figure class="g-photo" data-i="${i}">
-        <img src="${esc(publicUrl(p))}" alt="" decoding="async">
+      <figure class="g-photo" data-i="${i}" tabindex="0" aria-label="Foto ${i + 1} di ${draft.photos.length}: trascina o usa le frecce ← → per spostarla">
+        <img src="${esc(publicUrl(p))}" alt="" decoding="async" draggable="false">
         ${i === 0 ? '<span class="g-cover-tag pixel">Copertina</span>' : ''}
         <div class="g-flagbar">
           <button type="button" data-p="hero" aria-pressed="${!!p.hero}" title="Usa come immagine della Home">Hero</button>
@@ -394,9 +489,7 @@
           <button type="button" data-p="rule" aria-pressed="${!!p.rule}" title="Mostra nelle regole della Home">Regole</button>
         </div>
         <figcaption>
-          <button type="button" data-p="left" aria-label="Sposta prima" ${i === 0 ? 'disabled' : ''}>◀</button>
           ${i > 0 ? '<button type="button" data-p="cover" aria-label="Usa come copertina">★</button>' : ''}
-          <button type="button" data-p="right" aria-label="Sposta dopo" ${i === draft.photos.length - 1 ? 'disabled' : ''}>▶</button>
           <button type="button" data-p="del" aria-label="Togli foto">✕</button>
         </figcaption>
       </figure>`).join('');
@@ -407,8 +500,6 @@
     if (!b) return;
     const i = +b.closest('.g-photo').dataset.i;
     const ph = draft.photos;
-    if (b.dataset.p === 'left' && i > 0) [ph[i - 1], ph[i]] = [ph[i], ph[i - 1]];
-    if (b.dataset.p === 'right' && i < ph.length - 1) [ph[i + 1], ph[i]] = [ph[i], ph[i + 1]];
     if (b.dataset.p === 'cover') ph.unshift(ph.splice(i, 1)[0]);
     if (b.dataset.p === 'hero' || b.dataset.p === 'contact') {
       // Una sola foto per impostazione: le altre del set la perdono, quelle degli altri set al salvataggio
@@ -427,6 +518,25 @@
       else removed.push(p);
     }
     renderPhotos();
+  });
+
+  // Ordine delle foto: trascinamento col mouse o col dito (tenendo premuto un attimo), oppure frecce ← → sulla foto selezionata
+  const photoSort = sortable(photosEl, '.g-photo', (els) => {
+    const ph = draft.photos;
+    draft.photos = els.map((el) => ph[+el.dataset.i]);
+    renderPhotos();
+  });
+
+  photosEl.addEventListener('keydown', (e) => {
+    const fig = e.target.closest('.g-photo');
+    if (!fig || e.target !== fig || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    e.preventDefault();
+    const i = +fig.dataset.i, j = i + (e.key === 'ArrowLeft' ? -1 : 1);
+    const ph = draft.photos;
+    if (j < 0 || j >= ph.length) return;
+    [ph[i], ph[j]] = [ph[j], ph[i]];
+    renderPhotos();
+    photosEl.querySelector(`.g-photo[data-i="${j}"]`)?.focus();
   });
 
   async function addFiles(files) {
