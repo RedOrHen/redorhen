@@ -458,6 +458,16 @@
   const form = $('#g-form');
   const F = form.elements;
   const photosEl = $('#g-photos');
+  // La pellicola della Home mostra al massimo 6 set (vedi buildReel in script.js)
+  const REEL_MAX = 6;
+  const reelOthers = () => sets.filter((s) => s.featured && s.id !== draft.id);
+  const reelFull = () => `La pellicola ha già ${REEL_MAX} set (${reelOthers().map((s) => s.character).join(', ')}): togline uno prima di aggiungere questo`;
+  F.featured.addEventListener('change', () => {
+    if (!F.featured.checked || reelOthers().length < REEL_MAX) return;
+    F.featured.checked = false;
+    $('.ev-error', form).textContent = reelFull();
+    toast(`Pellicola piena: massimo ${REEL_MAX} set`, true);
+  });
   const progress = $('.g-progress', form);
   const bar = $('#g-bar');
   let draft = null;        // set in modifica
@@ -613,6 +623,7 @@
     const yearRaw = String(F.year.value).trim();
     const year = yearRaw ? parseInt(yearRaw, 10) : null;
     if (yearRaw && !(year >= 1990 && year <= 2100)) { err.textContent = "Controlla l'anno (es. 2026)"; F.year.focus(); return; }
+    if (F.featured.checked && !draft.featured && reelOthers().length >= REEL_MAX) { err.textContent = reelFull(); F.featured.checked = false; return; }
     Object.assign(draft, {
       character, series: canon('series', F.series.value), category: canon('category', F.category.value),
       fair: canon('fair', F.fair.value), year,

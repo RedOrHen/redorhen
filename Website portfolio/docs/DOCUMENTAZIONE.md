@@ -167,6 +167,8 @@ Il browser resta collegato finché non si preme **Esci**.
 
 - **+ Nuovo set**: personaggio, serie, categoria (diventa il filtro della pagina Lavori), **fiera** (secondo filtro della
   pagina Lavori; vuota per gli shooting fuori fiera), **anno**, cosplayer, pubblicato/bozza, "mostra nella pellicola della Home".
+- **Pellicola della Home: massimo 6 set.** Se ce ne sono già 6 con "mostra nella pellicola", la casella non si spunta e
+  l'editor avvisa elencando i set già in pellicola: bisogna toglierne uno prima di aggiungerne un altro.
 - Personaggio, serie, categoria, fiera e anno **suggeriscono i valori già usati** negli altri set. Se si scrive un valore
   che esiste già con maiuscole o spazi diversi (es. "lucca comics"), al salvataggio viene usato quello salvato ("Lucca Comics").
 - **Set natalizi**: se la categoria contiene "Natal" (Natale, Natalizio, Natalizia), il set compare sul sito solo dal
