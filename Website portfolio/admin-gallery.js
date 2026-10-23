@@ -285,7 +285,7 @@
       const draft = s.published === false;
       const flags = draft
         ? [hero || contact ? 'Solo ' + [hero && 'Hero', contact && 'Contatti'].filter(Boolean).join(' e ') : 'Bozza']
-        : [hero && 'Hero', contact && 'Contatti', s.photos.some((p) => p.story) && 'Storia', s.photos.some((p) => p.rule) && 'Regole', s.featured && '★ Home'].filter(Boolean);
+        : [hero && 'Hero', contact && 'Contatti', s.photos.some((p) => p.story) && 'Storia', s.photos.some((p) => p.rule) && 'Regole', s.featured && '★ Home', /natal/i.test(s.category || '') && 'Natale: 1 nov–6 gen'].filter(Boolean);
       const hide = yearFilter && (yearFilter === 'none' ? !!s.year : String(s.year) !== yearFilter);
       return `<article class="g-card${s.published === false ? ' is-draft' : ''}" data-id="${esc(s.id)}"${hide ? ' hidden' : ''}>
         <button class="g-cover" type="button" data-act="edit" aria-label="Modifica ${esc(s.character)}">

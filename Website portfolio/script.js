@@ -1169,9 +1169,14 @@
   const remoteP = ['home', 'lavori', 'contatti'].includes(page) ? loadRemoteWorks() : Promise.resolve(null);
   // Foto scelta nell'area admin per un'impostazione ('hero' o 'contact').
   // null se non ce n'è nessuna o se Supabase tarda: resta l'immagine già presente nella pagina.
+  // Set natalizi (categoria con "Natal": Natale, Natalizio, Natalizia…) visibili solo dal 1° novembre al 6 gennaio
+  const isChristmas = (w) => /natal/i.test(w.category || '');
+  const christmasTime = (() => { const d = new Date(), m = d.getMonth() + 1, g = d.getDate(); return m >= 11 || (m === 1 && g <= 6); })();
+  const inSeason = (w) => christmasTime || !isChristmas(w);
+
   const chosenPhoto = (flag, ms) => Promise.race([
     remoteP.then((sets) => {
-      for (const w of sets || []) { const p = w.photos.find((x) => x[flag]); if (p) return { w, p }; }
+      for (const w of (sets || []).filter(inSeason)) { const p = w.photos.find((x) => x[flag]); if (p) return { w, p }; }
       return null;
     }).catch(() => null),
     new Promise((res) => setTimeout(() => res(null), ms))
@@ -1356,7 +1361,7 @@
     const remote = await remoteP;
     // Nella galleria e nella pellicola solo i set pubblicati; i set non pubblicati arrivano
     // solo se contengono la foto scelta come Hero o Contatti (servono a chosenPhoto)
-    const published = (remote || []).filter((w) => w.published);
+    const published = (remote || []).filter((w) => w.published && inSeason(w));
     if (published.length) WORKS = published;
   }
   normalizeWorks();

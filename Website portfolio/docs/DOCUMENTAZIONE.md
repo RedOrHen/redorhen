@@ -169,6 +169,9 @@ Il browser resta collegato finché non si preme **Esci**.
   pagina Lavori; vuota per gli shooting fuori fiera), **anno**, cosplayer, pubblicato/bozza, "mostra nella pellicola della Home".
 - Personaggio, serie, categoria, fiera e anno **suggeriscono i valori già usati** negli altri set. Se si scrive un valore
   che esiste già con maiuscole o spazi diversi (es. "lucca comics"), al salvataggio viene usato quello salvato ("Lucca Comics").
+- **Set natalizi**: se la categoria contiene "Natal" (Natale, Natalizio, Natalizia), il set compare sul sito solo dal
+  1° novembre al 6 gennaio compresi (galleria, filtri, Home e foto Hero/Contatti). Nell'area admin resta sempre visibile,
+  con l'etichetta "Natale: 1 nov–6 gen".
 - Il menu **Tutti gli anni** in alto mostra solo i set di un anno (o quelli senza anno); con un anno scelto ▲ ▼ sono disattivati.
 - Anno e fiera richiedono le colonne `year` e `fair`: si creano una volta eseguendo `supabase/anno-fiera.sql`.
 - **Foto**: si trascinano nel riquadro o si scelgono dal computer (JPG, PNG, WebP).
