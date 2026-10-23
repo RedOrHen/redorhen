@@ -314,38 +314,55 @@ main { display: block; }
   display: flex; align-items: center; gap: 8px;
 }
 .rec i { width: 10px; height: 10px; background: #ff3b1a; }
-/* Dati di scatto come sul display della fotocamera (ISO, tempo, diaframma, focale) */
-.cam-data {
-  position: absolute; z-index: 3; top: 10px; right: 10px;
-  display: flex; gap: 12px; padding: 4px 8px;
-  background: rgba(18, 11, 7, .55); color: var(--cream);
+/* Display del mirino sopra la foto: batteria, istogramma, punti di messa a fuoco e barra dei dati di scatto */
+.vf-hud { position: absolute; inset: 0; z-index: 3; pointer-events: none; color: var(--cream); }
+.vf-batt {
+  position: absolute; top: 14px; right: 16px; display: flex; gap: 2px; padding: 2px 3px 2px 2px;
+  box-shadow: inset 0 0 0 2px var(--cream);
 }
-/* Punto di messa a fuoco: cerca il fuoco e si blocca, poi ricomincia */
-.af {
-  position: absolute; z-index: 3; left: 50%; top: 42%; width: 64px; height: 48px; margin: -24px 0 0 -32px;
-  pointer-events: none; color: var(--amber);
-  background:
-    linear-gradient(currentColor, currentColor) top left / 14px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) top left / 2px 14px no-repeat,
-    linear-gradient(currentColor, currentColor) top right / 14px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) top right / 2px 14px no-repeat,
-    linear-gradient(currentColor, currentColor) bottom left / 14px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) bottom left / 2px 14px no-repeat,
-    linear-gradient(currentColor, currentColor) bottom right / 14px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) bottom right / 2px 14px no-repeat;
-  animation: af-lock 7s steps(1) infinite;
+.vf-batt::after { content: ''; position: absolute; right: -4px; top: 4px; width: 2px; height: 4px; background: var(--cream); }
+.vf-batt i { width: 5px; height: 8px; background: #7bd85a; }
+.vf-hist {
+  position: absolute; top: 38px; right: 16px; width: 72px; height: 34px; padding: 3px;
+  background: rgba(18, 11, 7, .45); box-shadow: inset 0 0 0 1px rgba(246, 231, 211, .5);
 }
+.vf-hist path { fill: rgba(246, 231, 211, .75); }
+/* griglia di punti AF: quello centrale cerca il fuoco, si blocca e ricomincia */
+.vf-af {
+  position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
+  display: grid; grid-template-columns: repeat(3, 18px); gap: 14px 22px;
+}
+.vf-af i { width: 18px; height: 12px; box-shadow: inset 0 0 0 1px rgba(246, 231, 211, .45); }
+.vf-af i.is-on { animation: af-lock 7s steps(1) infinite; }
 @keyframes af-lock {
-  0% { transform: scale(1.35); color: var(--amber); opacity: .9; }
-  4% { transform: scale(1.15); }
-  8% { transform: scale(1.25); }
-  12% { transform: scale(1); color: var(--cream); opacity: 1; }
-  16% { opacity: 0; }
-  19% { opacity: 1; }
-  70% { transform: scale(1); color: var(--cream); opacity: 1; }
-  100% { transform: scale(1); color: var(--cream); opacity: 0; }
+  0% { box-shadow: inset 0 0 0 2px var(--amber); transform: scale(1.5); }
+  5% { transform: scale(1.2); }
+  10% { transform: scale(1.4); }
+  15% { transform: scale(1); box-shadow: inset 0 0 0 2px #7bd85a; background: rgba(123, 216, 90, .25); }
+  70% { transform: scale(1); box-shadow: inset 0 0 0 2px #7bd85a; background: rgba(123, 216, 90, .25); }
+  71% { transform: scale(1); box-shadow: inset 0 0 0 1px rgba(246, 231, 211, .45); background: none; }
 }
-@media (max-width: 520px) { .cam-focal { display: none; } .cam-data { gap: 8px; } }
+.vf-bar {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 14px; background: rgba(8, 5, 3, .82); font-size: 13px;
+}
+.vf-ev { display: flex; gap: 6px; padding-top: 6px; font-size: 12px; position: relative; }
+.vf-ev::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: repeating-linear-gradient(90deg, var(--cream) 0 2px, transparent 2px 6px);
+  opacity: .6;
+}
+.vf-ev b { font-weight: 400; }
+.vf-ev .is-0 { color: var(--amber); }
+/* la didascalia del fotogramma sta sopra la barra */
+.hero-photo .frame-tag { bottom: 46px; }
+@media (max-width: 520px) {
+  .vf-ev, .vf-hist { display: none; }
+  .vf-bar { font-size: 12px; padding: 7px 10px; }
+  .vf-af { gap: 10px 14px; grid-template-columns: repeat(3, 14px); }
+  .vf-af i { width: 14px; height: 10px; }
+}
 .frame-tag { position: absolute; z-index: 3; left: 14px; bottom: 14px; }
 
 .hero-content { position: relative; z-index: 2; display: grid; gap: 28px; }
@@ -377,9 +394,9 @@ main { display: block; }
   .hero { justify-content: flex-start; padding-top: calc(var(--header-h) + 20px); padding-bottom: calc(9vh + 64px); }
   .hero-photo {
     position: relative; inset: auto; margin: 0 auto;
-    height: min(46svh, calc((100vw - 2 * var(--gutter)) / var(--ar, .8))); max-width: 100%;
+    height: min(42svh, calc((100vw - 2 * var(--gutter)) / var(--ar, .8))); max-width: 100%;
   }
-  .hero-content { margin-top: -9vw; gap: 22px; }
+  .hero-content { margin-top: 28px; gap: 22px; }
   .hero-title { order: 1; }
   .hero-foot { order: 3; }
   .hero-title { font-size: clamp(36px, 10.4vw, 120px); }

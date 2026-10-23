@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&family=Silkscreen:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=20261023a">
+  <link rel="stylesheet" href="style.css?v=20261023b">
   <script>
     (function (d) {
       var c = d.documentElement.classList; c.add('js');
@@ -63,8 +63,17 @@
         <span class="vf vf-tl" aria-hidden="true"></span><span class="vf vf-tr" aria-hidden="true"></span>
         <span class="vf vf-bl" aria-hidden="true"></span><span class="vf vf-br" aria-hidden="true"></span>
         <span class="rec pixel" aria-hidden="true"><i class="blink"></i>Rec</span>
-        <span class="cam-data pixel" aria-hidden="true"><span>ISO 200</span><span>1/250</span><span>F2.8</span><span class="cam-focal">85MM</span></span>
-        <span class="af" aria-hidden="true"></span>
+        <div class="vf-hud" aria-hidden="true">
+          <span class="vf-batt"><i></i><i></i><i></i></span>
+          <svg class="vf-hist" viewBox="0 0 64 28" preserveAspectRatio="none"><path d="M0 28 L0 26 L6 25 L10 22 L14 23 L18 19 L22 20 L26 16 L30 17 L33 9 L36 12 L39 3 L42 10 L45 14 L49 12 L53 18 L57 21 L61 24 L64 26 L64 28 Z"/></svg>
+          <span class="vf-af"><i></i><i></i><i></i><i></i><i class="is-on"></i><i></i><i></i><i></i><i></i></span>
+          <div class="vf-bar pixel">
+            <span>1/250</span>
+            <span>f/2.8</span>
+            <span class="vf-ev"><b>-3</b><b>-2</b><b>-1</b><b class="is-0">0</b><b>1</b><b>2</b><b>3</b></span>
+            <span>ISO 200</span>
+          </div>
+        </div>
         <div class="hero-clip">
           <div class="px" data-px-manual>
             <img src="assets/works/hero.jpg" width="1600" height="2000" fetchpriority="high" decoding="async"
@@ -316,11 +325,11 @@
     </div>
   </footer>
 
-  <script src="assets/data/works.js?v=20261023a"></script>
-  <script src="assets/data/admin-config.js?v=20261023a"></script>
+  <script src="assets/data/works.js?v=20261023b"></script>
+  <script src="assets/data/admin-config.js?v=20261023b"></script>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="script.js?v=20261023a"></script>
+  <script src="script.js?v=20261023b"></script>
 </body>
 </html>
