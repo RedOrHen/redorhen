@@ -90,7 +90,7 @@
   const cleanRow = (s) => ({
     id: s.id, character: s.character, series: s.series || null, category: s.category || null,
     cosplayer: s.cosplayer || null, featured: !!s.featured, published: s.published !== false,
-    position: s.position || 0, photos: s.photos.map((p) => (p.path ? { path: p.path, thumb: p.thumb || null, w: p.w, h: p.h, alt: p.alt || null, hero: p.hero || undefined, contact: p.contact || undefined, story: p.story || undefined, rule: p.rule || undefined } : p))
+    position: s.position || 0, year: s.year || null, fair: s.fair || null, photos: s.photos.map((p) => (p.path ? { path: p.path, thumb: p.thumb || null, w: p.w, h: p.h, alt: p.alt || null, hero: p.hero || undefined, contact: p.contact || undefined, story: p.story || undefined, rule: p.rule || undefined } : p))
   });
 
   const RemoteStore = (sb) => ({
@@ -207,6 +207,7 @@
   const errText = (e) => {
     const m = (e && e.message) || '';
     if (/esaurito|Impossibile leggere/.test(m)) return m;
+    if (/'(year|fair)' column|column .*(year|fair)/i.test(m)) return 'Mancano i campi Anno e Fiera: esegui supabase/anno-fiera.sql in Supabase';
     if (/maximum allowed size|exceeded/i.test(m)) return 'Supabase rifiuta il file: il limite del contenitore "gallery" è più basso di 20 MB (vedi supabase/LEGGIMI.md)';
     if (/fetch|network/i.test(m)) return 'Connessione assente: riprova';
     if (/row-level|policy|JWT|JWS|auth/i.test(m)) return 'Permesso negato: accedi di nuovo';
@@ -230,9 +231,36 @@
     updateShrinkButton();
   }
 
+  // Valori già usati in un campo, senza doppioni (maiuscole e spazi non contano), in ordine alfabetico
+  const norm = (v) => String(v ?? '').trim().replace(/\s+/g, ' ');
+  const known = (key) => {
+    const m = new Map();
+    sets.forEach((s) => { const v = norm(s[key]); if (v && !m.has(v.toLowerCase())) m.set(v.toLowerCase(), v); });
+    return [...m.values()].sort((a, b) => a.localeCompare(b, 'it'));
+  };
+  // Se il valore esiste già con un'altra grafia, si usa quella salvata
+  const canon = (key, v) => {
+    const t = norm(v);
+    return known(key).find((x) => x.toLowerCase() === t.toLowerCase()) || t;
+  };
+  const fillList = (id, values) => { $(id).innerHTML = values.map((v) => `<option value="${esc(v)}">`).join(''); };
+  let yearFilter = '';
+
   function render() {
-    const cats = [...new Set(sets.map((s) => s.category).filter(Boolean))];
-    $('#g-cats').innerHTML = cats.map((c) => `<option value="${esc(c)}">`).join('');
+    fillList('#g-cats', known('category'));
+    fillList('#g-chars', known('character'));
+    fillList('#g-series', known('series'));
+    fillList('#g-fairs', known('fair'));
+    const years = [...new Set(sets.map((s) => s.year).filter(Boolean))].sort((a, b) => b - a);
+    fillList('#g-years', years);
+    const yf = $('#g-year-filter');
+    if (yf) {
+      if (yearFilter && !years.includes(+yearFilter)) yearFilter = '';
+      yf.innerHTML = '<option value="">Tutti gli anni</option>' + years.map((y) => `<option value="${y}">${y}</option>`).join('') +
+        (sets.some((s) => !s.year) ? '<option value="none">Senza anno</option>' : '');
+      yf.value = yearFilter;
+      yf.hidden = !years.length;
+    }
     if (!sets.length) {
       list.innerHTML = `<div class="g-empty side-box">
         <h2>Nessun set</h2>
@@ -248,7 +276,8 @@
       const flags = draft
         ? [hero || contact ? 'Solo ' + [hero && 'Hero', contact && 'Contatti'].filter(Boolean).join(' e ') : 'Bozza']
         : [hero && 'Hero', contact && 'Contatti', s.photos.some((p) => p.story) && 'Storia', s.photos.some((p) => p.rule) && 'Regole', s.featured && '★ Home'].filter(Boolean);
-      return `<article class="g-card${s.published === false ? ' is-draft' : ''}" data-id="${esc(s.id)}">
+      const hide = yearFilter && (yearFilter === 'none' ? !!s.year : String(s.year) !== yearFilter);
+      return `<article class="g-card${s.published === false ? ' is-draft' : ''}" data-id="${esc(s.id)}"${hide ? ' hidden' : ''}>
         <button class="g-cover" type="button" data-act="edit" aria-label="Modifica ${esc(s.character)}">
           ${cover ? `<img src="${esc(publicUrl(cover))}" alt="" loading="lazy" decoding="async">` : '<span class="g-nophoto pixel">Nessuna foto</span>'}
           <span class="g-badge pixel">${s.photos.length} foto</span>
@@ -257,10 +286,11 @@
         <div class="g-info">
           <b>${esc(s.character)}</b>
           <span>${esc([s.series, s.category].filter(Boolean).join(' · ') || '—')}</span>
+          ${s.fair || s.year ? `<span class="g-when">${esc([s.fair, s.year].filter(Boolean).join(' · '))}</span>` : ''}
         </div>
         <div class="g-actions">
-          <button class="btn-sm icon" type="button" data-act="up" aria-label="Sposta prima" ${i === 0 ? 'disabled' : ''}>▲</button>
-          <button class="btn-sm icon" type="button" data-act="down" aria-label="Sposta dopo" ${i === sets.length - 1 ? 'disabled' : ''}>▼</button>
+          <button class="btn-sm icon" type="button" data-act="up" aria-label="Sposta prima" ${i === 0 || yearFilter ? 'disabled' : ''}>▲</button>
+          <button class="btn-sm icon" type="button" data-act="down" aria-label="Sposta dopo" ${i === sets.length - 1 || yearFilter ? 'disabled' : ''}>▼</button>
           <button class="btn-sm" type="button" data-act="edit">Modifica</button>
           <button class="btn-sm btn-danger" type="button" data-act="del" aria-label="Elimina ${esc(s.character)}">✕</button>
         </div>
@@ -328,6 +358,8 @@
     F.series.value = draft.series || '';
     F.category.value = draft.category || '';
     F.cosplayer.value = draft.cosplayer || '';
+    F.fair.value = draft.fair || '';
+    F.year.value = draft.year || '';
     F.published.checked = draft.published !== false;
     F.featured.checked = !!draft.featured;
     $('#g-delete').hidden = isNew;
@@ -441,10 +473,14 @@
     e.preventDefault();
     const err = $('.ev-error', form);
     if (busy) { err.textContent = 'Attendi la fine del caricamento delle foto'; return; }
-    const character = F.character.value.trim();
+    const character = canon('character', F.character.value);
     if (!character) { err.textContent = 'Indica il nome del personaggio'; F.character.focus(); return; }
+    const yearRaw = String(F.year.value).trim();
+    const year = yearRaw ? parseInt(yearRaw, 10) : null;
+    if (yearRaw && !(year >= 1990 && year <= 2100)) { err.textContent = "Controlla l'anno (es. 2026)"; F.year.focus(); return; }
     Object.assign(draft, {
-      character, series: F.series.value.trim(), category: F.category.value.trim(),
+      character, series: canon('series', F.series.value), category: canon('category', F.category.value),
+      fair: canon('fair', F.fair.value), year,
       cosplayer: F.cosplayer.value.trim(), published: F.published.checked, featured: F.featured.checked
     });
     draft.photos.forEach((p, k) => { p.alt = p.alt || `${character}${draft.series ? ' — ' + draft.series : ''}, foto ${k + 1}`; });
@@ -480,6 +516,7 @@
   });
 
   $('#g-new').addEventListener('click', () => openEditor(null));
+  $('#g-year-filter')?.addEventListener('change', (e) => { yearFilter = e.target.value; render(); });
 
   /* ---------- Importazione da works.js ---------- */
   $('#g-import').addEventListener('click', async () => {

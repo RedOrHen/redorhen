@@ -62,6 +62,7 @@
   const rowToWork = (r) => ({
     character: r.character || '', series: r.series || '', category: r.category || '',
     cosplayer: r.cosplayer || '', featured: !!r.featured, published: r.published !== false,
+    fair: r.fair || '', year: r.year || null,
     // src = originale in piena qualità; thumb = anteprima leggera per griglia e miniature
     photos: (r.photos || []).map((p) => ({ src: p.src || publicUrl(p.path), thumb: p.thumb ? publicUrl(p.thumb) : undefined, w: p.w, h: p.h, alt: p.alt, hero: !!p.hero, contact: !!p.contact, story: !!p.story, rule: !!p.rule }))
   });
@@ -83,7 +84,11 @@
     try {
       const headers = { apikey: DB.supabaseAnonKey };
       if (DB.supabaseAnonKey.startsWith('eyJ')) headers.Authorization = `Bearer ${DB.supabaseAnonKey}`;
-      const res = await fetch(`${DB.supabaseUrl}/rest/v1/gallery_sets?select=character,series,category,cosplayer,featured,published,photos&order=position.asc,created_at.asc`, { headers, signal: ctrl.signal });
+      const url = (cols) => `${DB.supabaseUrl}/rest/v1/gallery_sets?select=${cols}&order=position.asc,created_at.asc`;
+      const base = 'character,series,category,cosplayer,featured,published,photos';
+      let res = await fetch(url(`${base},fair,year`), { headers, signal: ctrl.signal });
+      // database senza i campi Anno e Fiera (supabase/anno-fiera.sql non ancora eseguito): si leggono i set senza
+      if (res.status === 400) res = await fetch(url(base), { headers, signal: ctrl.signal });
       if (!res.ok) return null;
       const sets = (await res.json()).map(rowToWork).filter((w) => w.photos.length);
       return sets.length ? sets : null;
@@ -676,12 +681,12 @@
 
     const nFoto = (n) => `${n} foto`;
     grid.innerHTML = WORKS.map((w) => `
-      <button class="work${w.photos.length > 1 ? ' work--set' : ''}" type="button" data-i="${w.index}" data-cat="${esc(w.category)}" data-cursor="Apri set" aria-label="Apri il set ${esc(w.character)}${w.series ? ', ' + esc(w.series) : ''}: ${nFoto(w.photos.length)}">
+      <button class="work${w.photos.length > 1 ? ' work--set' : ''}" type="button" data-i="${w.index}" data-cat="${esc(w.category)}" data-fair="${esc(w.fair || '')}" data-cursor="Apri set" aria-label="Apri il set ${esc(w.character)}${w.series ? ', ' + esc(w.series) : ''}: ${nFoto(w.photos.length)}">
         <span class="work-stack">
           <span class="px" style="aspect-ratio:${w.w}/${w.h}"><img src="${esc(w.src)}" alt="${esc(w.alt)}" width="${w.w}" height="${w.h}" loading="lazy" decoding="async"></span>
           <span class="work-count pixel" aria-hidden="true"><i></i>${nFoto(w.photos.length)}</span>
         </span>
-        <span class="work-cap pixel"><span>${esc(w.character)}</span><span class="muted">${esc(w.series)}</span></span>
+        <span class="work-cap pixel"><span>${esc(w.character)}</span><span class="muted">${esc(w.series)}</span>${w.fair || w.year ? `<span class="ember">${esc([w.fair, w.year].filter(Boolean).join(' '))}</span>` : ''}</span>
       </button>`).join('');
 
     const counter = $('.scene-count');
@@ -691,6 +696,16 @@
       bar.innerHTML = [`<button class="filter" type="button" data-filter="" aria-pressed="true">Tutti<sup>${count()}</sup></button>`]
         .concat(cats.map((c) => `<button class="filter" type="button" data-filter="${esc(c)}" aria-pressed="false">${esc(c)}<sup>${count(c)}</sup></button>`)).join('');
     }
+    // Filtro per fiera: per vedere gli scatti fatti in una fiera (tutte le edizioni)
+    const fairBar = $('.filters--fair');
+    const fairs = [...new Set(WORKS.map((w) => w.fair).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
+    const fairCount = (f) => WORKS.filter((w) => w.fair === f).length;
+    if (fairBar) {
+      fairBar.hidden = !fairs.length;
+      fairBar.innerHTML = `<span class="filters-label pixel" aria-hidden="true">Fiera</span>` +
+        [`<button class="filter" type="button" data-fair="" aria-pressed="true">Tutte</button>`]
+          .concat(fairs.map((f) => `<button class="filter" type="button" data-fair="${esc(f)}" aria-pressed="false">${esc(f)}<sup>${fairCount(f)}</sup></button>`)).join('');
+    }
 
     const items = $$('.work', grid);
     items.forEach((it) => pixel.observe($('.px', it)));
@@ -698,19 +713,24 @@
     const setCount = () => { if (counter) counter.textContent = String(visible().length); };
     setCount();
 
-    bar?.addEventListener('click', (e) => {
+    let cat = '', fair = '';
+    const onFilter = (group, e) => {
       const b = e.target.closest('.filter');
       if (!b) return;
-      $$('.filter', bar).forEach((f) => f.setAttribute('aria-pressed', String(f === b)));
-      const c = b.dataset.filter;
+      $$('.filter', group).forEach((f) => f.setAttribute('aria-pressed', String(f === b)));
+      if (group === fairBar) fair = b.dataset.fair; else cat = b.dataset.filter;
       const apply = () => {
-        items.forEach((it) => { it.hidden = !!c && it.dataset.cat !== c; });
+        items.forEach((it) => { it.hidden = (!!cat && it.dataset.cat !== cat) || (!!fair && it.dataset.fair !== fair); });
+        const empty = $('.gallery-empty');
+        if (empty) empty.hidden = visible().length > 0;
         setCount();
         if (hasGSAP) ScrollTrigger.refresh();
         if (motion) gsap.fromTo(visible(), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .8, ease: 'expo.out', stagger: .04 });
       };
       if (motion) gsap.to(items, { opacity: 0, duration: .2, onComplete: apply }); else apply();
-    });
+    };
+    bar?.addEventListener('click', (e) => onFilter(bar, e));
+    fairBar?.addEventListener('click', (e) => onFilter(fairBar, e));
 
     // Carosello del set
     const lb = document.createElement('div');
@@ -901,7 +921,7 @@
       list = set.photos;
       pos = 0;
       opener = from;
-      title.innerHTML = `<span>${esc(set.character)}</span><span class="muted">${esc(set.series)}</span>${set.cosplayer ? `<span class="ember">${esc(set.cosplayer)}</span>` : ''}`;
+      title.innerHTML = `<span>${esc(set.character)}</span><span class="muted">${esc(set.series)}</span>${set.fair || set.year ? `<span class="muted">${esc([set.fair, set.year].filter(Boolean).join(' '))}</span>` : ''}${set.cosplayer ? `<span class="ember">${esc(set.cosplayer)}</span>` : ''}`;
       thumbs.innerHTML = list.length > 1 ? list.map((p, k) => `
         <button class="lb-thumb" type="button" data-k="${k}" aria-label="Foto ${k + 1} di ${list.length}">
           <img src="${esc(p.thumb || p.src)}" alt="" width="${p.w}" height="${p.h}" loading="lazy" decoding="async">
@@ -982,9 +1002,26 @@
     const success = $('.success');
     const status = $('.form-status');
 
-    const pkg = new URLSearchParams(location.search).get('pacchetto');
+    // dal Listino arriva ?pacchetto=lv1|lv2|lv3 (lv3 = Boss Fight per 2 persone, il prezzo "da")
+    let pkg = new URLSearchParams(location.search).get('pacchetto');
+    if (pkg === 'lv3') pkg = 'lv3_2';
     const sel = $('#f-pacchetto');
     if (pkg && sel && [...sel.options].some((o) => o.value === pkg)) sel.value = pkg;
+
+    // Sotto il pacchetto: prezzo, eventuale sconto e importo finale (gli stessi che arrivano nell'email)
+    const quoteEl = $('#f-quote');
+    const showQuote = async () => {
+      if (!quoteEl || !sel) return;
+      const q = await quote(sel.value);
+      quoteEl.hidden = !q;
+      if (!q) return;
+      quoteEl.innerHTML = (q.promo
+        ? `Prezzo: <s>${euroTxt(q.price)}</s> <b>${euroTxt(q.final)}</b> con lo sconto ${esc(promoOff(q.promo))}${q.promo.label ? ` (${esc(q.promo.label)})` : ''}`
+        : `Prezzo: <b>${euroTxt(q.final)}</b>`) +
+        (q.deposit != null ? ` · caparra del 50% per confermare il set: <b>${euroTxt(q.deposit)}</b>` : '');
+    };
+    sel?.addEventListener('change', showQuote);
+    showQuote();
 
     const messages = {
       valueMissing: 'Questo campo serve',
@@ -1020,15 +1057,35 @@
       e.preventDefault();
       const ok = inputs.map(check).every(Boolean);
       if (!ok) { inputs.find((i) => i.getAttribute('aria-invalid') === 'true')?.focus(); return; }
-      const data = new FormData(form);
+      const raw = new FormData(form);
       const btn = $('button[type="submit"]', form);
+      const q = await quote(sel?.value).catch(() => null);
+      const promoTxt = q && q.promo
+        ? `${promoOff(q.promo)}${q.promo.label ? ` (${q.promo.label})` : ''}, valido fino al ${new Date(`${q.promo.ends_on}T12:00:00`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}`
+        : 'Nessuno';
+      // Riepilogo in un ordine chiaro: prima cosa ha scelto e quanto paga, poi chi è e cosa vuole
+      const summary = [
+        ['Pacchetto scelto', q ? q.name : 'Non lo sa ancora'],
+        ['Prezzo di listino', q ? euroTxt(q.price) : '—'],
+        ['Sconto applicato', q ? promoTxt : '—'],
+        ['Importo finale da pagare', q ? euroTxt(q.final) : 'Da definire'],
+        ...(q && q.deposit != null ? [['Caparra per confermare il set (50%, shooting in fiera)', euroTxt(q.deposit)]] : []),
+        ['Nome', raw.get('nome')],
+        ['email', raw.get('email')],
+        ['Personaggio / serie', raw.get('personaggio') || '—'],
+        ['Data o evento', raw.get('data') || '—'],
+        ['Messaggio', raw.get('messaggio')],
+        ['Consenso privacy', 'Accettato']
+      ];
+      const subject = `Nuova richiesta shooting · ${q ? `${q.name} · ${euroTxt(q.final)}${q.promo ? ' (scontato)' : ''}` : 'pacchetto da definire'} · ${raw.get('nome')}`;
 
       if (SITE.formEndpoint) {
         btn.disabled = true;
         status.textContent = 'Invio in corso…';
-        data.set('pacchetto', sel?.selectedOptions[0]?.text || 'Non lo so ancora');
-        data.set('privacy', 'Accettata');
-        data.set('_subject', `Richiesta shooting — ${data.get('personaggio') || data.get('nome')}`);
+        const data = new FormData();
+        data.set('_subject', subject);
+        data.set('_gotcha', raw.get('_gotcha') || '');
+        summary.forEach(([k, v]) => data.append(k, v));
         try {
           const r = await fetch(SITE.formEndpoint, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
           if (!r.ok) {
@@ -1045,16 +1102,8 @@
       }
 
       if (SITE.email) {
-        const body = [
-          `Nome: ${data.get('nome')}`,
-          `Email: ${data.get('email')}`,
-          `Personaggio / serie: ${data.get('personaggio') || '-'}`,
-          `Data o evento: ${data.get('data') || '-'}`,
-          `Pacchetto: ${sel?.selectedOptions[0]?.text || '-'}`,
-          '',
-          data.get('messaggio')
-        ].join('\n');
-        location.href = `mailto:${SITE.email}?subject=${encodeURIComponent('Richiesta shooting — ' + (data.get('personaggio') || data.get('nome')))}&body=${encodeURIComponent(body)}`;
+        const body = summary.map(([k, v]) => `${k === 'email' ? 'Email' : k}: ${v}`).join('\n');
+        location.href = `mailto:${SITE.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         done('Si è aperto il tuo programma di posta con il messaggio già pronto: premi invia e ci sentiamo presto.');
         return;
       }
@@ -1211,6 +1260,50 @@
       return `<span>▲ ${p.label ? `${esc(p.label)}: ` : ''}sconto ${esc(off(p))} ${esc(which)}, fino al ${esc(until)}</span>`;
     }).join('');
     banner.hidden = false;
+  }
+
+  /* ---------------------------------------------------------------
+     CONTATTI: preventivo del pacchetto scelto, con prezzi e sconti dell'area admin
+     --------------------------------------------------------------- */
+  // prezzi di riserva, uguali a quelli scritti nel Listino, se Supabase non risponde
+  const CHOICES = {
+    lv1: { name: 'LV.1 Side Quest', key: 'lv1', plan: 'lv1', price: 50 },
+    lv2: { name: 'LV.2 Main Quest', key: 'lv2', plan: 'lv2', price: 150 },
+    lv3_2: { name: 'LV.3 Boss Fight, 2 persone', key: 'lv3_2', plan: 'lv3', price: 60 },
+    lv3_3: { name: 'LV.3 Boss Fight, 3 persone', key: 'lv3_3', plan: 'lv3', price: 80 },
+    fiera: { name: 'Shooting in fiera', key: 'extra_evento', plan: null, price: 15, suffix: '· 3 foto', fair: true }
+  };
+  const euroTxt = (n) => `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')} €`;
+  const promoCut = (price, p) => Math.max(0, Math.round((p.kind === 'percent' ? price * (1 - p.amount / 100) : price - p.amount) * 100) / 100);
+  const promoOff = (p) => (p.kind === 'percent' ? `−${+p.amount}%` : `−${euroTxt(+p.amount)}`);
+  let quoteData = null;
+  const loadQuoteData = () => {
+    if (!quoteData) {
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      quoteData = Promise.all([loadPrices(), loadPromos()]).then(([prices, promos]) => ({
+        prices: Object.fromEntries(prices.map((r) => [r.key, r])),
+        promos: promos.filter((p) => p.amount > 0 && p.starts_on <= today && today <= p.ends_on)
+      }));
+    }
+    return quoteData;
+  };
+  // { name, price, promo, final, deposit }: deposit = caparra del 50% per gli shooting in fiera
+  async function quote(choice) {
+    const c = CHOICES[choice];
+    if (!c) return null;
+    const { prices, promos } = await loadQuoteData();
+    const row = prices[c.key];
+    const price = row && row.price != null ? +row.price : c.price;
+    const suffix = row ? row.suffix || '' : c.suffix || '';
+    const promo = c.plan ? promos.filter((p) => (p.plans || []).includes(c.plan)).sort((a, b) => promoCut(price, a) - promoCut(price, b))[0] || null : null;
+    const final = promo ? promoCut(price, promo) : price;
+    const extra = suffix.replace(/^[·\s/]+/, '');
+    return {
+      name: c.fair && extra ? `${c.name} (${extra})` : c.name,
+      price, promo, final,
+      deposit: c.fair ? Math.round(final * 50) / 100 : null
+    };
   }
 
   (async () => {

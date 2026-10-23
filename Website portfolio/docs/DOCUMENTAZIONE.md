@@ -29,7 +29,7 @@ Il concept visivo è "**Pixel → Fotogramma**": un sito cinematografico (titoli
 | Pagina | File | Contenuto |
 |---|---|---|
 | Home | `index.html` | Hero con foto in cornice da cinepresa, numeri, missione, tre pilastri (ognuno con una foto dai set), storia in tre capitoli, pellicola orizzontale con i set in evidenza, "quattro quest" dello shooting, invito finale, footer |
-| Lavori | `lavori.html` | Griglia dei set con filtri per categoria (su telefono in una riga che scorre); clic su un set → visualizzatore a carosello |
+| Lavori | `lavori.html` | Griglia dei set con filtri per categoria e per fiera (su telefono in righe che scorrono); clic su un set → visualizzatore a carosello |
 | Listino | `listino.html` | Tre pacchetti (Side Quest 50 €, Main Quest 150 €, Boss Fight da 60 €), extra, tempi di consegna, domande frequenti |
 | Contatti | `contatti.html` | Modulo di richiesta shooting (inviato con Formspree), link a email e Instagram |
 | Area admin | `admin.html` | Login, calendario appuntamenti, editor dei set della galleria (vedi §5) |
@@ -126,6 +126,16 @@ Se ne usano al massimo 3 per sezione, nell'ordine dei set e delle foto, e solo d
 Se ne scegli meno di 3 (o nessuna), i posti rimasti li riempie il sito con le copertine dei primi set.
 Nella storia le cornici sono sempre verticali; nelle regole prendono le proporzioni della foto.
 
+### Modulo contatti ed email di riepilogo
+
+- Il pacchetto si sceglie tra LV.1, LV.2, Boss Fight per 2 o per 3 persone e Shooting in fiera
+  (dal Listino arriva già selezionato). Sotto compaiono prezzo, eventuale sconto e, per la fiera, la caparra del 50%.
+- L'email che arriva da Formspree ha l'oggetto "Nuova richiesta shooting · pacchetto · importo · nome" e il riepilogo
+  in quest'ordine: pacchetto scelto, prezzo di listino, sconto applicato (con nome e scadenza), importo finale da pagare,
+  caparra (solo fiera), poi nome, email, personaggio, data, messaggio e consenso privacy.
+- Prezzi e sconti sono quelli della scheda Listino dell'area admin; se Supabase non risponde valgono i prezzi di riserva
+  in `CHOICES` di `script.js` (uguali a quelli scritti nel Listino).
+
 ### Testi e contatti
 
 - Testi delle pagine: direttamente nei file HTML.
@@ -153,8 +163,12 @@ Il browser resta collegato finché non si preme **Esci**.
 
 ### Editor dei set (scheda Lavori)
 
-- **+ Nuovo set**: personaggio, serie, categoria (diventa il filtro della pagina Lavori), cosplayer, pubblicato/bozza,
-  "mostra nella pellicola della Home".
+- **+ Nuovo set**: personaggio, serie, categoria (diventa il filtro della pagina Lavori), **fiera** (secondo filtro della
+  pagina Lavori; vuota per gli shooting fuori fiera), **anno**, cosplayer, pubblicato/bozza, "mostra nella pellicola della Home".
+- Personaggio, serie, categoria, fiera e anno **suggeriscono i valori già usati** negli altri set. Se si scrive un valore
+  che esiste già con maiuscole o spazi diversi (es. "lucca comics"), al salvataggio viene usato quello salvato ("Lucca Comics").
+- Il menu **Tutti gli anni** in alto mostra solo i set di un anno (o quelli senza anno); con un anno scelto ▲ ▼ sono disattivati.
+- Anno e fiera richiedono le colonne `year` e `fair`: si creano una volta eseguendo `supabase/anno-fiera.sql`.
 - **Foto**: si trascinano nel riquadro o si scelgono dal computer (JPG, PNG, WebP).
   - di qualsiasi peso: il browser le riduce a **4000 px** sul lato lungo (le più piccole restano come sono) e le salva
     in JPEG al 90%, togliendo i metadati; poi crea l'anteprima da 1600 px. Su Supabase non finisce mai l'originale.
@@ -287,4 +301,6 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
   - Scelta della foto della Home e della pagina Contatti dall'area admin (interruttori Hero / Contatti).
   - Seconda revisione: pilastri della Home con foto, filtri di Lavori in una riga su telefono, meno spazi vuoti.
   - Online solo foto a 4000 px senza metadati (originali da 20 MB cancellati); percentuale di caricamento nell'editor.
+  - Campi Anno e Fiera con suggerimenti dai valori già salvati; filtro per fiera nella pagina Lavori; caparra del 50% per la fiera
+    nel Listino; email di riepilogo con pacchetto, sconto e importo finale.
   - Extra del Listino aggiornati; prezzi e sconti a tempo modificabili dall'area admin (scheda Listino).

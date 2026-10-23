@@ -349,6 +349,9 @@ body.admin::after { display: none; }
 .g-flagbar button:hover { color: var(--cream); }
 .g-flagbar button[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
 .g-note { color: var(--dust); font-size: 14px; line-height: 1.5; }
+.g-when { font-family: var(--f-pixel); font-size: 12px; color: var(--amber); }
+.g-yearfilter select { min-height: 44px; padding: 6px 12px; background: var(--ink); color: var(--cream); border: 0; }
+.g-card[hidden] { display: none; }
 .g-note b { color: var(--cream); }
 
 /* ---------- Sconti ---------- */
