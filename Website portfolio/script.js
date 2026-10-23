@@ -271,12 +271,24 @@
     const xTo = gsap.quickTo(cur, 'x', { duration: .22, ease: 'power3' });
     const yTo = gsap.quickTo(cur, 'y', { duration: .22, ease: 'power3' });
     window.addEventListener('mousemove', (e) => { xTo(e.clientX); yTo(e.clientY); }, { passive: true });
+    // Sopra testi o sfondi arancioni il cursore (anche lui arancione) sparirebbe: lì diventa nero
+    const EMBER = 'rgb(255, 106, 26)';
+    const overEmber = (el) => {
+      if (!(el instanceof Element)) return false;
+      if (getComputedStyle(el).color === EMBER) return true;
+      for (let n = el; n && n !== document.documentElement; n = n.parentElement) {
+        const bg = getComputedStyle(n).backgroundColor;
+        if (bg && bg !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(bg)) return bg === EMBER;
+      }
+      return false;
+    };
     document.addEventListener('mouseover', (e) => {
       const t = e.target.closest('[data-cursor], a, button, summary, label, input, select, textarea');
       const lab = t?.closest('[data-cursor]')?.dataset.cursor;
       cur.classList.toggle('has-label', !!lab);
       if (lab) label.textContent = lab;
       cur.classList.toggle('is-link', !!t && !lab);
+      cur.classList.toggle('on-ember', overEmber(e.target));
     });
     document.addEventListener('mouseleave', () => gsap.to(cur, { opacity: 0, duration: .2 }));
     document.addEventListener('mouseenter', () => gsap.to(cur, { opacity: 1, duration: .2 }));
