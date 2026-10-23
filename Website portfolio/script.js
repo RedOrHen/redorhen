@@ -804,6 +804,9 @@
       zoom.reset();
     };
 
+    // Foto da 4000 px: si scarica solo se serve (vedi show), altrimenti basta l'anteprima da 1600 px
+    let ensureFull = null;
+
     // Zoom: rotella e doppio clic con il mouse; due dita e doppio tocco su telefono.
     // Da ingrandita la foto si sposta trascinandola.
     const zoom = (() => {
@@ -824,6 +827,7 @@
         lbImg.style.transition = anim ? 'transform .35s cubic-bezier(.16, 1, .3, 1)' : 'none';
         lbImg.style.transform = s === 1 ? '' : `translate(${tx}px, ${ty}px) scale(${s})`;
         media.classList.toggle('is-zoomed', s > 1);
+        if (s > 1 && ensureFull) ensureFull(); // ingrandendo serve il dettaglio della foto grande
         lb.classList.toggle('is-zoomed', s > 1); // da ingrandita spariscono tutti i comandi
         media.dataset.cursor = s > 1 ? 'Trascina' : 'Zoom';
       };
@@ -919,21 +923,34 @@
       };
     })();
     let showToken = 0;
+    const THUMB_SIDE = 1600; // lato lungo delle anteprime create dall'area admin
     const show = () => {
       const p = list[pos];
       const token = ++showToken;
       fit(p);
-      // Prima l'anteprima (veloce), poi l'originale in piena qualità appena è scaricato
+      // Prima l'anteprima (veloce). La foto da 4000 px si scarica solo se lo schermo ha più pixel
+      // di quelli dell'anteprima (4K, Retina) o quando si ingrandisce: telefoni e schermi Full HD
+      // vedono già l'anteprima nitida, e così si risparmia il traffico mensile di Supabase.
       lbImg.src = p.thumb || p.src;
       lbImg.alt = p.alt;
+      media.classList.remove('is-loading');
+      ensureFull = null;
       if (p.thumb && p.thumb !== p.src) {
-        media.classList.add('is-loading');
-        const full = new Image();
-        full.decoding = 'async';
-        full.onload = () => { if (token === showToken) { lbImg.src = p.src; media.classList.remove('is-loading'); } };
-        full.onerror = () => { if (token === showToken) media.classList.remove('is-loading'); };
-        full.src = p.src;
-      } else media.classList.remove('is-loading');
+        let started = false;
+        ensureFull = () => {
+          if (started) return;
+          started = true;
+          media.classList.add('is-loading');
+          const full = new Image();
+          full.decoding = 'async';
+          full.onload = () => { if (token === showToken) { lbImg.src = p.src; media.classList.remove('is-loading'); } };
+          full.onerror = () => { if (token === showToken) media.classList.remove('is-loading'); };
+          full.src = p.src;
+        };
+        const thumbW = p.w * Math.min(1, THUMB_SIDE / Math.max(p.w, p.h));
+        const needW = (media.offsetWidth || innerWidth) * (window.devicePixelRatio || 1);
+        if (thumbW < needW * 0.95) ensureFull();
+      }
       cnt.textContent = `${String(pos + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
       $$('.lb-thumb', thumbs).forEach((t, k) => {
         t.classList.toggle('is-active', k === pos);

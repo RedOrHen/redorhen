@@ -40,7 +40,9 @@ oppure con **tre clic rapidi sul logo REDORHEN** in alto in qualunque pagina pub
 
 ### Il visualizzatore delle foto (pagina Lavori)
 
-- Mostra subito l'anteprima leggera e poi la sostituisce con la **versione a 4000 px** ("HD…" in un angolo mentre carica).
+- Mostra l'anteprima da 1600 px. La **versione a 4000 px** si scarica solo se serve: su schermi con più pixel
+  dell'anteprima (4K, Retina) o appena si ingrandisce ("HD…" in un angolo mentre carica). Telefoni e schermi Full HD
+  vedono già l'anteprima nitida, e così si risparmia il traffico mensile di Supabase (5 GB sul piano gratuito).
 - **Zoom**: rotella o doppio clic con il mouse; pizzico o doppio tocco con le dita. Fino a 12×.
   Da ingrandita la foto **esce dalla cornice e riempie tutto lo schermo**, si sposta trascinandola fino ai suoi bordi
   e **tutti i comandi spariscono**. Si torna alla dimensione normale con doppio clic/tocco, pizzico, tasto `0` o `Esc`.
@@ -175,7 +177,10 @@ Il browser resta collegato finché non si preme **Esci**.
   - durante il caricamento una barra e la **percentuale** mostrano l'avanzamento di tutte le foto scelte.
 - **Riduci N foto a 4000 px** (compare solo se servono): converte le foto caricate prima di questa regola e
   **cancella definitivamente** da Supabase i loro originali in alta risoluzione, con barra e percentuale.
-  Prima salva il set con i file nuovi, poi cancella i vecchi. Le foto originali sul computer non vengono toccate.
+  Prima salva il set con i file nuovi (partendo dalla versione salvata in quel momento), poi cancella i vecchi. Le foto
+  originali sul computer non vengono toccate. Durante la riduzione l'editor dei set non si apre: un salvataggio fatto
+  nel frattempo annullerebbe la riduzione. Se una foto punta a un originale già cancellato ma la versione a 4000 px
+  esiste, il pulsante la ricollega.
 - Sotto ogni foto: ◀ ▶ ordine, ★ copertina (la prima foto è la copertina), ✕ togli,
   e gli interruttori **Hero** / **Contatti**: una sola foto per ciascuno in tutto il sito; scegliendone un'altra,
   quella di prima perde l'impostazione automaticamente (anche se sta in un altro set).

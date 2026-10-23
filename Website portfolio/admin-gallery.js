@@ -159,13 +159,23 @@
     // Crea la versione a 4000 px di una foto già online (il file vecchio si cancella dopo il salvataggio)
     async shrinkExisting(photo, onProgress) {
       onProgress?.(0.02);
+      const path = `${photo.path.replace(/\.[a-z0-9]+$/i, '')}-4000.jpg`;
       const res = await fetch(fileUrl(photo.path), { cache: 'no-store' });
-      if (!res.ok) throw new Error(`download ${res.status}`);
+      if (!res.ok) {
+        // Riparazione: l'originale non c'è più ma la versione a 4000 px sì (una conversione
+        // precedente era stata annullata da un salvataggio del set fatto nel frattempo): si collega quella
+        const done = await fetch(fileUrl(path), { cache: 'no-store' });
+        if (!done.ok) throw new Error(`download ${res.status}`);
+        const bmp = await createImageBitmap(await done.blob());
+        const fixed = { ...photo, path, w: bmp.width, h: bmp.height };
+        bmp.close?.();
+        onProgress?.(1);
+        return fixed;
+      }
       const raw = await res.blob();
       onProgress?.(0.4);
       const web = await webVersion(new Blob([raw], { type: raw.type || 'image/jpeg' }));
       onProgress?.(0.5);
-      const path = `${photo.path.replace(/\.[a-z0-9]+$/i, '')}-4000.jpg`;
       await this.put(path, web.blob, (p) => onProgress?.(0.5 + p * 0.5));
       return { ...photo, path, w: web.w, h: web.h };
     },
@@ -348,6 +358,7 @@
   let busy = 0;
 
   function openEditor(s) {
+    if (shrinking) { toast('Attendi la fine della riduzione delle foto', true); return; }
     const isNew = !s;
     draft = isNew
       ? { id: uuid(), character: '', series: '', category: '', cosplayer: '', featured: false, published: true, photos: [], _new: true }
@@ -559,6 +570,7 @@
 
   /* ---------- Foto già online: versione a 4000 px al posto degli originali ---------- */
   const big = (p) => p.path && Math.max(p.w || 0, p.h || 0) > MAX_SIDE;
+  let shrinking = false; // durante la riduzione l'editor resta chiuso: un salvataggio la annullerebbe
   function updateShrinkButton() {
     const btn = $('#g-shrink');
     if (!btn) return;
@@ -576,11 +588,12 @@
     const out = $('#g-batch');
     const bbar = $('#g-batch-bar');
     btn.disabled = true;
+    shrinking = true;
     let done = 0, failed = 0;
     try {
       for (const t of todo) {
         const old = [];
-        const photos = [...t.s.photos];
+        const fixed = new Map(); // indirizzo vecchio → foto a 4000 px
         for (const p of t.photos) {
           const step = (x) => {
             const total = (done + x) / n;
@@ -590,15 +603,17 @@
           step(0);
           try {
             const np = await store.shrinkExisting(p, step);
-            photos[photos.indexOf(p)] = np;
-            old.push(p.path);
+            fixed.set(p.path, np);
+            if (np.path !== p.path) old.push(p.path);
           } catch (e) { console.warn(e); failed++; }
           done++;
         }
-        if (!old.length) continue;
-        // prima si salva il set con i file nuovi, poi si cancellano gli originali
-        await store.save({ ...t.s, photos });
-        await store.removeFiles(old.map((path) => ({ path })));
+        if (!fixed.size) continue;
+        // Si riparte dalla versione del set salvata adesso (non da quella letta all'inizio),
+        // così non si perdono modifiche fatte nel frattempo; poi si cancellano gli originali
+        const fresh = (await store.list()).find((x) => x.id === t.s.id) || t.s;
+        await store.save({ ...fresh, photos: (fresh.photos || []).map((p) => fixed.get(p.path) || p) });
+        if (old.length) await store.removeFiles(old.map((path) => ({ path })));
       }
       out.textContent = failed ? `Fatto: ${n - failed} foto ridotte, ${failed} non riuscite (riprova)` : `Fatto: ${n} foto ridotte a 4000 px, originali cancellati ★`;
       toast(failed ? 'Riduzione completata con qualche errore' : 'Foto ridotte a 4000 px ★', !!failed);
@@ -607,6 +622,7 @@
       out.textContent = errText(e);
       toast(errText(e), true);
     } finally {
+      shrinking = false;
       showBar(bbar, null);
       btn.disabled = false;
       load();
