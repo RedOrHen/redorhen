@@ -314,7 +314,7 @@ main { display: block; }
   display: flex; align-items: center; gap: 8px;
 }
 .rec i { width: 10px; height: 10px; background: #ff3b1a; }
-/* Display del mirino sopra la foto: batteria, istogramma, punti di messa a fuoco e barra dei dati di scatto */
+/* Display del mirino sopra la foto: batteria e barra dei dati di scatto */
 .vf-hud { position: absolute; inset: 0; z-index: 3; pointer-events: none; color: var(--cream); }
 .vf-batt {
   position: absolute; top: 14px; right: 16px; display: flex; gap: 2px; padding: 2px 3px 2px 2px;
@@ -322,26 +322,6 @@ main { display: block; }
 }
 .vf-batt::after { content: ''; position: absolute; right: -4px; top: 4px; width: 2px; height: 4px; background: var(--cream); }
 .vf-batt i { width: 5px; height: 8px; background: #7bd85a; }
-.vf-hist {
-  position: absolute; top: 38px; right: 16px; width: 72px; height: 34px; padding: 3px;
-  background: rgba(18, 11, 7, .45); box-shadow: inset 0 0 0 1px rgba(246, 231, 211, .5);
-}
-.vf-hist path { fill: rgba(246, 231, 211, .75); }
-/* griglia di punti AF: quello centrale cerca il fuoco, si blocca e ricomincia */
-.vf-af {
-  position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
-  display: grid; grid-template-columns: repeat(3, 18px); gap: 14px 22px;
-}
-.vf-af i { width: 18px; height: 12px; box-shadow: inset 0 0 0 1px rgba(246, 231, 211, .45); }
-.vf-af i.is-on { animation: af-lock 7s steps(1) infinite; }
-@keyframes af-lock {
-  0% { box-shadow: inset 0 0 0 2px var(--amber); transform: scale(1.5); }
-  5% { transform: scale(1.2); }
-  10% { transform: scale(1.4); }
-  15% { transform: scale(1); box-shadow: inset 0 0 0 2px #7bd85a; background: rgba(123, 216, 90, .25); }
-  70% { transform: scale(1); box-shadow: inset 0 0 0 2px #7bd85a; background: rgba(123, 216, 90, .25); }
-  71% { transform: scale(1); box-shadow: inset 0 0 0 1px rgba(246, 231, 211, .45); background: none; }
-}
 .vf-bar {
   position: absolute; left: 0; right: 0; bottom: 0;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -358,10 +338,8 @@ main { display: block; }
 /* la didascalia del fotogramma sta sopra la barra */
 .hero-photo .frame-tag { bottom: 46px; }
 @media (max-width: 520px) {
-  .vf-ev, .vf-hist { display: none; }
+  .vf-ev { display: none; }
   .vf-bar { font-size: 12px; padding: 7px 10px; }
-  .vf-af { gap: 10px 14px; grid-template-columns: repeat(3, 14px); }
-  .vf-af i { width: 14px; height: 10px; }
 }
 .frame-tag { position: absolute; z-index: 3; left: 14px; bottom: 14px; }
 
