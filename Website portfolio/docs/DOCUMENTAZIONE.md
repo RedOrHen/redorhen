@@ -131,7 +131,7 @@ Nella storia le cornici sono sempre verticali; nelle regole prendono le proporzi
 ### Modulo contatti ed email di riepilogo
 
 - Il pacchetto si sceglie tra LV.1, LV.2, Boss Fight per 2 o per 3 persone e Shooting in fiera
-  (dal Listino arriva già selezionato). Sotto compaiono prezzo, eventuale sconto e, per la fiera, la caparra del 50%.
+  (dal Listino arriva già selezionato). Il campo Instagram è facoltativo e finisce nel riepilogo dell'email. Sotto compaiono prezzo, eventuale sconto e, per la fiera, la caparra del 50%.
 - L'email che arriva da Formspree ha l'oggetto "Nuova richiesta shooting · pacchetto · importo · nome" e il riepilogo
   in quest'ordine: pacchetto scelto, prezzo di listino, sconto applicato (con nome e scadenza), importo finale da pagare,
   caparra (solo fiera), poi nome, email, personaggio, data, messaggio e consenso privacy.
@@ -200,8 +200,8 @@ Il browser resta collegato finché non si preme **Esci**.
 Si cambiano i numeri e si preme **Salva prezzi**: il Listino si aggiorna subito, senza push.
 - Il prezzo "da" del Boss Fight è calcolato da solo: il più basso tra 2 e 3 persone.
 - Accanto al prezzo di ogni pacchetto c'è il **numero di foto consegnate**: compare nella descrizione del pacchetto
-  ("Fino a N foto", "N foto consegnate", "circa N foto"). Si salva nella stessa tabella `price_items` con le chiavi `photos_*`.
-- Negli extra il testo a destra viene scritto dopo il prezzo (es. "/ foto"); un prezzo vuoto mostra "Da concordare".
+  ("N foto ritoccate", "N foto consegnate", "N foto (di gruppo e singole)"). Si salva nella stessa tabella `price_items` con le chiavi `photos_*`.
+- Negli extra il testo a destra viene scritto dopo il prezzo (es. "/ foto"); un prezzo vuoto mostra "Da concordare", un prezzo a 0 mostra "Inclusa".
 - Serve la tabella `price_items`: si crea una volta eseguendo `supabase/prezzi.sql` (contiene già i prezzi di partenza).
   Se Supabase non risponde, il Listino mostra i prezzi scritti in `listino.html`.
 
@@ -312,3 +312,8 @@ Dettagli e procedura di attivazione in [`supabase/LEGGIMI.md`](../supabase/LEGGI
   - Campi Anno e Fiera con suggerimenti dai valori già salvati; filtro per fiera nella pagina Lavori; caparra del 50% per la fiera
     nel Listino; email di riepilogo con pacchetto, sconto e importo finale.
   - Extra del Listino aggiornati; prezzi e sconti a tempo modificabili dall'area admin (scheda Listino).
+  - Revisione dei testi: tempi di consegna (provini in 2 settimane, foto ritoccate in un mese), trasferta inclusa,
+    shooting in fiera di circa 30 minuti, caparra in contanti o PayPal, 4 nuove domande frequenti, campo Instagram
+    facoltativo nel modulo, frasi neutre per genere.
+  - Anteprima social: immagini dei meta tag con indirizzo completo (https://redorhen.github.io/redorhen/…) e descrizione
+    propria per Lavori, Listino e Contatti.

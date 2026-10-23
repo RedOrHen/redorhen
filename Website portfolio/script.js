@@ -1069,7 +1069,7 @@
     showQuote();
 
     const messages = {
-      valueMissing: 'Questo campo serve',
+      valueMissing: 'Compila questo campo',
       typeMismatch: "Controlla l'indirizzo email",
       tooShort: 'Scrivimi qualcosa in più'
     };
@@ -1117,6 +1117,7 @@
         ...(q && q.deposit != null ? [['Caparra per confermare il set (50%, shooting in fiera)', euroTxt(q.deposit)]] : []),
         ['Nome', raw.get('nome')],
         ['email', raw.get('email')],
+        ['Instagram', raw.get('instagram') || '—'],
         ['Personaggio / serie', raw.get('personaggio') || '—'],
         ['Data o evento', raw.get('data') || '—'],
         ['Messaggio', raw.get('messaggio')],
@@ -1153,7 +1154,7 @@
         return;
       }
 
-      status.textContent = 'Il modulo non è ancora attivo: imposta email o formEndpoint in assets/data/works.js.';
+      status.textContent = 'Il modulo al momento non funziona: scrivimi via email o su Instagram.';
     });
   }
 
@@ -1266,7 +1267,7 @@
         el.dataset.price = String(v.price);
         el.textContent = euro(v.price);
       } else {
-        el.textContent = v.price == null ? 'Da concordare' : `${euro(v.price)}${v.suffix ? ` ${v.suffix}` : ''}`;
+        el.textContent = v.price == null ? 'Da concordare' : v.price === 0 ? 'Inclusa' : `${euro(v.price)}${v.suffix ? ` ${v.suffix}` : ''}`;
       }
     });
   }
