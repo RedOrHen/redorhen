@@ -646,7 +646,6 @@
     const frames = $$('.story-frame');
     const chapters = $$('.chapter');
     const lvl = $('.story-level');
-    const lvlBar = $('.story-level-bar i');
     let current = -1;
     const setFrame = (i) => {
       if (i === current) return;
@@ -655,7 +654,6 @@
       chapters.forEach((c, k) => c.classList.toggle('is-active', k === i));
       const ch = chapters[i];
       if (lvl && ch) lvl.textContent = ch.dataset.level;
-      if (lvlBar && ch) lvlBar.style.transform = `scaleX(${ch.dataset.xp})`;
       const px = $('.px', frames[i]);
       if (px) pixel.run(px);
     };
