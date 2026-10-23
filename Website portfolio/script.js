@@ -568,12 +568,30 @@
     fillStory();
     fillPillars();
 
-    // Countdown arcade nella CTA finale
+    // Countdown arcade nella CTA finale: parte quando il finale è sullo schermo, scende da 10 a 0
+    // una volta sola e a zero diventa il pulsante per prenotare (senza animazioni il pulsante c'è subito)
     const cd = $('.countdown-n');
-    if (cd && motion) {
-      let n = 10;
-      setInterval(() => { n = n <= 0 ? 10 : n - 1; cd.textContent = n; }, 1000);
-    }
+    const cdBox = $('.countdown');
+    const cdGo = $('.countdown-go');
+    const showGo = () => {
+      if (cdBox) cdBox.hidden = true;
+      if (!cdGo) return;
+      cdGo.hidden = false;
+      if (motion) gsap.fromTo(cdGo, { scale: .6, opacity: 0 }, { scale: 1, opacity: 1, duration: .5, ease: 'back.out(3)' });
+    };
+    if (cd && cdGo && motion && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (!entries.some((en) => en.isIntersecting)) return;
+        io.disconnect();
+        let n = 10;
+        const t = setInterval(() => {
+          n -= 1;
+          cd.textContent = n;
+          if (n <= 0) { clearInterval(t); setTimeout(showGo, 400); }
+        }, 1000);
+      }, { threshold: .6 });
+      io.observe(cdBox);
+    } else showGo();
 
     if (!motion) return;
 

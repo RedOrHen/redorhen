@@ -558,6 +558,7 @@ main { display: block; }
 .final-row { margin-top: 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 28px; }
 .final-ctas { display: flex; flex-wrap: wrap; gap: 20px; }
 .countdown { font-size: 16px; }
+.countdown[hidden], .countdown-go[hidden] { display: none; }
 
 /* ---------- Footer ---------- */
 
