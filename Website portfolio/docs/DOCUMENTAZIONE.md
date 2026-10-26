@@ -6,6 +6,7 @@ Ultimo aggiornamento: 22 ottobre 2026.
 - Sito pubblicato: <https://redorhen.github.io/redorhen/>
 - Codice: cartella `Website portfolio/` del repository `RedOrHen/redorhen`
 - Attivazione di Supabase passo per passo: [`supabase/LEGGIMI.md`](../supabase/LEGGIMI.md)
+- Risultati dei test di carico e del controllo di sicurezza: [`REPORT-TEST.md`](REPORT-TEST.md)
 - Piano creativo iniziale (storico, non più aggiornato): [`BUILD-PLAN.md`](../BUILD-PLAN.md)
 
 ---

@@ -29,3 +29,4 @@ passando da pixel grossi a immagini nitide.
 - [Documentazione completa](Website%20portfolio/docs/DOCUMENTAZIONE.md): pagine, struttura dei file,
   contenuti, area riservata, pubblicazione, problemi frequenti.
 - [Attivazione di Supabase](Website%20portfolio/supabase/LEGGIMI.md): guida passo per passo.
+- [Report dei test](Website%20portfolio/docs/REPORT-TEST.md): test di carico e controllo di sicurezza.
