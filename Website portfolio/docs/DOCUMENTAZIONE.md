@@ -86,7 +86,7 @@ Website portfolio/
    └─ REPORT-TEST.md        test di carico e controllo di sicurezza
 ```
 
-Restano solo sul computer e **non** vanno su GitHub (vedi `.gitignore`): `Media/` (immagini di riferimento iniziali),
+Restano solo sul computer e **non** vanno su GitHub (vedi `.gitignore`):
 `.taste-skill/` (screenshot delle revisioni di design, si ricrea quando serve), `.claude/` (impostazioni locali) e i file
 delle skill (`.claude/skills/`, `.agents/`).
 
