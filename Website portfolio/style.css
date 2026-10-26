@@ -819,7 +819,6 @@ main { display: block; }
 }
 .note-box h3 { font-family: var(--f-display); font-weight: 400; font-size: clamp(32px, 3vw, 48px); line-height: .98; text-transform: uppercase; }
 .note-box p { color: var(--dust); }
-.tbd { color: var(--amber); font-family: var(--f-pixel); font-size: .8em; letter-spacing: .04em; }
 @media (max-width: 860px) { .extras { grid-template-columns: 1fr; } }
 
 .faq { display: grid; max-width: 980px; }
@@ -898,7 +897,6 @@ main { display: block; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-  .marquee-track { animation: none; }
 }
 
 /* ---------- Zoom nel visualizzatore ---------- */

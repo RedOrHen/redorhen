@@ -175,7 +175,6 @@ body.admin::after { display: none; }
 .tg-resize::after { content: ''; position: absolute; left: 50%; bottom: 2px; width: 16px; height: 2px; margin-left: -8px; background: currentColor; opacity: .5; }
 .tg-now { position: absolute; left: 0; right: 0; z-index: 4; height: 2px; background: #ff3b1a; pointer-events: none; }
 .tg-now::before { content: ''; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; background: #ff3b1a; }
-.tg-ghost { position: absolute; left: 2px; right: 2px; z-index: 1; background: rgba(255, 106, 26, .18); box-shadow: inset 0 0 0 2px var(--ember); pointer-events: none; }
 
 /* ---------- Sidebar ---------- */
 

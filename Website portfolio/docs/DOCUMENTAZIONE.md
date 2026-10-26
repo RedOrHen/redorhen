@@ -7,7 +7,6 @@ Ultimo aggiornamento: 22 ottobre 2026.
 - Codice: cartella `Website portfolio/` del repository `RedOrHen/redorhen`
 - Attivazione di Supabase passo per passo: [`supabase/LEGGIMI.md`](../supabase/LEGGIMI.md)
 - Risultati dei test di carico e del controllo di sicurezza: [`REPORT-TEST.md`](REPORT-TEST.md)
-- Piano creativo iniziale (storico, non più aggiornato): [`BUILD-PLAN.md`](../BUILD-PLAN.md)
 
 ---
 
@@ -80,13 +79,16 @@ Website portfolio/
 │                           fata-girasoli.jpg
 ├─ supabase/
 │  ├─ setup.sql             tabelle, regole di sicurezza e spazio foto (da eseguire in Supabase)
+│  ├─ sconti.sql, prezzi.sql, anno-fiera.sql   aggiunte successive, già comprese in setup.sql
 │  └─ LEGGIMI.md            guida all'attivazione di Supabase
-├─ docs/DOCUMENTAZIONE.md   questo file
-└─ BUILD-PLAN.md            piano creativo iniziale (storico)
+└─ docs/
+   ├─ DOCUMENTAZIONE.md     questo file
+   └─ REPORT-TEST.md        test di carico e controllo di sicurezza
 ```
 
-Restano solo sul computer e **non** vanno su GitHub (vedi `.gitignore`): `Media/`, `.taste-skill/`
-(screenshot delle revisioni), `_upload/` (cartella temporanea di caricamento) e i file delle skill (`.claude/skills/`).
+Restano solo sul computer e **non** vanno su GitHub (vedi `.gitignore`): `Media/` (immagini di riferimento iniziali),
+`.taste-skill/` (screenshot delle revisioni di design, si ricrea quando serve), `.claude/` (impostazioni locali) e i file
+delle skill (`.claude/skills/`, `.agents/`).
 
 ### Tecnologie
 
