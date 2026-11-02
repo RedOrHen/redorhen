@@ -252,7 +252,7 @@ from (values
   ('lv2', 50, null),
   ('lv3_2', 60, null),
   ('lv3_3', 100, null),
-  ('extra_foto', 10, '/ foto'),
+  ('extra_foto', 5, '/ foto'),
   ('extra_trasferta', 0, null),
   ('extra_evento', 30, '· 3 foto')
 ) as v (key, price, suffix)

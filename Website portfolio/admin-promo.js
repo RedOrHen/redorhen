@@ -15,7 +15,7 @@
   // Prezzi del Listino: questi sono quelli di partenza, sostituiti da quelli salvati
   const PRICES = {
     lv1: { price: 30 }, lv2: { price: 50 }, lv3_2: { price: 60 }, lv3_3: { price: 100 },
-    extra_foto: { price: 10, suffix: '/ foto' }, extra_trasferta: { price: 0 }, extra_evento: { price: 30, suffix: '· 3 foto' },
+    extra_foto: { price: 5, suffix: '/ foto' }, extra_trasferta: { price: 0 }, extra_evento: { price: 30, suffix: '· 3 foto' },
     // numero di foto consegnate per pacchetto (stessa tabella, chiavi photos_*)
     photos_lv1: { price: 3 }, photos_lv2: { price: 6 }, photos_lv3_2: { price: 5 }, photos_lv3_3: { price: 10 }
   };
