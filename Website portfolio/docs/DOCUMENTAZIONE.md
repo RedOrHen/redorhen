@@ -20,7 +20,7 @@ Ultimo aggiornamento: 22 ottobre 2026.
 4. **ricevere richieste di shooting** tramite il modulo contatti;
 5. dare al proprietario un'**area riservata** con il calendario degli appuntamenti e l'editor della galleria.
 
-Il concept visivo è "**Pixel → Fotogramma**": un sito cinematografico (titoli enormi, barre letterbox, REC e timecode) con dettagli da videogioco in pixel art (etichette, livelli LV, quest, "+100 XP"). Le foto compaiono passando da pixel grossi a nitide.
+Il concept visivo è "**Pixel → Fotogramma**": un sito cinematografico (titoli enormi, barre letterbox, REC e timecode) con dettagli da videogioco in pixel art (etichette, capitoli LV, "+100 XP"). Le foto compaiono passando da pixel grossi a nitide.
 
 ---
 
@@ -28,9 +28,9 @@ Il concept visivo è "**Pixel → Fotogramma**": un sito cinematografico (titoli
 
 | Pagina | File | Contenuto |
 |---|---|---|
-| Home | `index.html` | Hero con foto in cornice da cinepresa, numeri, missione, tre pilastri (ognuno con una foto dai set), storia in tre capitoli, pellicola orizzontale con i set in evidenza, "quattro quest" dello shooting, invito finale, footer |
+| Home | `index.html` | Hero con foto in cornice da cinepresa, numeri, missione, tre pilastri (ognuno con una foto dai set), storia in tre capitoli, pellicola orizzontale con i set in evidenza, "quattro passi" dello shooting, invito finale, footer |
 | Lavori | `lavori.html` | Griglia dei set con filtri per categoria e per fiera (su telefono in righe che scorrono); clic su un set → visualizzatore a carosello |
-| Listino | `listino.html` | Tre pacchetti (Side Quest 50 €, Main Quest 150 €, Boss Fight da 60 €), extra, tempi di consegna, domande frequenti |
+| Listino | `listino.html` | Tre pacchetti (Mini set 30 €, Set intero 100 €, Set di gruppo da 60 €), extra, tempi di consegna, domande frequenti |
 | Contatti | `contatti.html` | Modulo di richiesta shooting (inviato con Formspree), link a email e Instagram |
 | Area admin | `admin.html` | Login, calendario appuntamenti, editor dei set della galleria (vedi §5) |
 
@@ -134,7 +134,7 @@ Il titolo "Tre regole del gioco" sta su una riga da 761 px di larghezza in su; s
 
 ### Modulo contatti ed email di riepilogo
 
-- Il pacchetto si sceglie tra LV.1, LV.2, Boss Fight per 2 o per 3 persone e Shooting in fiera
+- Il pacchetto si sceglie tra Mini set, Set intero, Set di gruppo per 2 o per 3 persone e Shooting in fiera
   (dal Listino arriva già selezionato). Il campo Instagram è facoltativo e finisce nel riepilogo dell'email. Sotto compaiono prezzo, eventuale sconto e, per la fiera, la caparra del 50%.
 - L'email che arriva da Formspree ha l'oggetto "Nuova richiesta shooting · pacchetto · importo · nome" e il riepilogo
   in quest'ordine: pacchetto scelto, prezzo di listino, sconto applicato (con nome e scadenza), importo finale da pagare,
@@ -206,11 +206,11 @@ Il browser resta collegato finché non si preme **Esci**.
 
 ### Prezzi e sconti (scheda Listino)
 
-**Prezzi.** In alto ci sono i prezzi dei pacchetti (LV.1, LV.2, Boss Fight per 2 e per 3 persone) e degli extra.
+**Prezzi.** In alto ci sono i prezzi dei pacchetti (Mini set, Set intero, Set di gruppo per 2 e per 3 persone) e degli extra.
 Si cambiano i numeri e si preme **Salva prezzi**: il Listino si aggiorna subito, senza push.
-- Il prezzo "da" del Boss Fight è calcolato da solo: il più basso tra 2 e 3 persone.
+- Il prezzo "da" del Set di gruppo è calcolato da solo: il più basso tra 2 e 3 persone.
 - Accanto al prezzo di ogni pacchetto c'è il **numero di foto consegnate**: compare nella descrizione del pacchetto
-  ("N foto ritoccate", "N foto consegnate", "N foto (di gruppo e singole)"). Si salva nella stessa tabella `price_items` con le chiavi `photos_*`.
+  ("N foto ritoccate", "N foto (di gruppo e singole)"). Si salva nella stessa tabella `price_items` con le chiavi `photos_*`.
 - Negli extra il testo a destra viene scritto dopo il prezzo (es. "/ foto"); un prezzo vuoto mostra "Da concordare", un prezzo a 0 mostra "Inclusa".
 - Serve la tabella `price_items`: si crea una volta eseguendo `supabase/prezzi.sql` (contiene già i prezzi di partenza).
   Se Supabase non risponde, il Listino mostra i prezzi scritti in `listino.html`.
@@ -218,10 +218,10 @@ Si cambiano i numeri e si preme **Salva prezzi**: il Listino si aggiorna subito,
 **Sconti.** Sotto i prezzi, nella stessa scheda:
 
 - Il modulo chiede: nome facoltativo (es. "Promo Halloween", si vede nel Listino), valore dello sconto in **%** o in **€**,
-  primo e ultimo giorno (compresi), pacchetti a cui si applica (LV.1, LV.2, LV.3) e se è attivo.
+  primo e ultimo giorno (compresi), pacchetti a cui si applica (Mini set, Set intero, Set di gruppo) e se è attivo.
   Sotto il modulo un esempio mostra subito i prezzi scontati.
 - Nei giorni del periodo il Listino mostra una fascia con lo sconto, il prezzo pieno barrato e quello scontato
-  (anche nei prezzi per 2 e 3 persone del Boss Fight). Gli extra non vengono scontati.
+  (anche nei prezzi per 2 e 3 persone del Set di gruppo). Gli extra non vengono scontati.
 - Se più sconti valgono nello stesso giorno, per ogni pacchetto si applica quello più conveniente.
 - Nella lista: **Modifica**, **Attiva/Disattiva** (lo sconto resta salvato ma non si vede), **Elimina**.
   Lo stato indica Attivo ora, Programmato, Scaduto o Disattivato.

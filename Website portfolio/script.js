@@ -1047,7 +1047,7 @@
     const success = $('.success');
     const status = $('.form-status');
 
-    // dal Listino arriva ?pacchetto=lv1|lv2|lv3 (lv3 = Boss Fight per 2 persone, il prezzo "da")
+    // dal Listino arriva ?pacchetto=lv1|lv2|lv3 (lv3 = Set di gruppo per 2 persone, il prezzo "da")
     let pkg = new URLSearchParams(location.search).get('pacchetto');
     if (pkg === 'lv3') pkg = 'lv3_2';
     const sel = $('#f-pacchetto');
@@ -1252,7 +1252,7 @@
     const euro = (n) => `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')} €`;
     const map = {};
     rows.forEach((r) => { map[r.key] = { price: r.price == null ? null : +r.price, suffix: r.suffix || '' }; });
-    // il "da" del Boss Fight è il più basso dei prezzi di gruppo
+    // il "da" del Set di gruppo è il più basso dei prezzi di gruppo
     const group = ['lv3_2', 'lv3_3'].map((k) => map[k] && map[k].price).filter((n) => n != null);
     if (group.length) map.lv3_from = { price: Math.min(...group) };
     $$('[data-count]').forEach((el) => {
@@ -1318,11 +1318,11 @@
      --------------------------------------------------------------- */
   // prezzi di riserva, uguali a quelli scritti nel Listino, se Supabase non risponde
   const CHOICES = {
-    lv1: { name: 'LV.1 Side Quest', key: 'lv1', plan: 'lv1', price: 50 },
-    lv2: { name: 'LV.2 Main Quest', key: 'lv2', plan: 'lv2', price: 150 },
-    lv3_2: { name: 'LV.3 Boss Fight, 2 persone', key: 'lv3_2', plan: 'lv3', price: 60 },
-    lv3_3: { name: 'LV.3 Boss Fight, 3 persone', key: 'lv3_3', plan: 'lv3', price: 80 },
-    fiera: { name: 'Shooting in fiera', key: 'extra_evento', plan: null, price: 15, suffix: '· 3 foto', fair: true }
+    lv1: { name: 'Mini set', key: 'lv1', plan: 'lv1', price: 30 },
+    lv2: { name: 'Set intero', key: 'lv2', plan: 'lv2', price: 100 },
+    lv3_2: { name: 'Set di gruppo, 2 persone', key: 'lv3_2', plan: 'lv3', price: 60 },
+    lv3_3: { name: 'Set di gruppo, 3 persone', key: 'lv3_3', plan: 'lv3', price: 80 },
+    fiera: { name: 'Shooting in fiera', key: 'extra_evento', plan: null, price: 30, suffix: '· 3 foto', fair: true }
   };
   const euroTxt = (n) => `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')} €`;
   const promoCut = (price, p) => Math.max(0, Math.round((p.kind === 'percent' ? price * (1 - p.amount / 100) : price - p.amount) * 100) / 100);

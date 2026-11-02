@@ -45,13 +45,13 @@ create trigger price_items_updated_at
 insert into public.price_items (key, user_id, price, suffix)
 select v.key, u.id, v.price, v.suffix
 from (values
-  ('lv1', 50, null),
-  ('lv2', 150, null),
+  ('lv1', 30, null),
+  ('lv2', 100, null),
   ('lv3_2', 60, null),
   ('lv3_3', 80, null),
   ('extra_foto', 5, '/ foto'),
   ('extra_trasferta', 0, null),
-  ('extra_evento', 15, '· 3 foto')
+  ('extra_evento', 30, '· 3 foto')
 ) as v (key, price, suffix)
 cross join (select id from auth.users order by created_at limit 1) as u
 on conflict (key) do nothing;

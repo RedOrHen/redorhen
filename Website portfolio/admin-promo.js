@@ -14,16 +14,16 @@
 
   // Prezzi del Listino: questi sono quelli di partenza, sostituiti da quelli salvati
   const PRICES = {
-    lv1: { price: 50 }, lv2: { price: 150 }, lv3_2: { price: 60 }, lv3_3: { price: 80 },
-    extra_foto: { price: 5, suffix: '/ foto' }, extra_trasferta: { price: 0 }, extra_evento: { price: 15, suffix: '· 3 foto' },
+    lv1: { price: 30 }, lv2: { price: 100 }, lv3_2: { price: 60 }, lv3_3: { price: 80 },
+    extra_foto: { price: 5, suffix: '/ foto' }, extra_trasferta: { price: 0 }, extra_evento: { price: 30, suffix: '· 3 foto' },
     // numero di foto consegnate per pacchetto (stessa tabella, chiavi photos_*)
-    photos_lv1: { price: 10 }, photos_lv2: { price: 20 }, photos_lv3_2: { price: 10 }, photos_lv3_3: { price: 10 }
+    photos_lv1: { price: 5 }, photos_lv2: { price: 15 }, photos_lv3_2: { price: 10 }, photos_lv3_3: { price: 10 }
   };
-  // Pacchetti per l'esempio degli sconti (il Boss Fight parte dal prezzo più basso)
+  // Pacchetti per l'esempio degli sconti (il Set di gruppo parte dal prezzo più basso)
   const PLANS = {
-    lv1: { name: 'Side Quest', get price() { return PRICES.lv1.price ?? 0; } },
-    lv2: { name: 'Main Quest', get price() { return PRICES.lv2.price ?? 0; } },
-    lv3: { name: 'Boss Fight', get price() { return Math.min(PRICES.lv3_2.price ?? 0, PRICES.lv3_3.price ?? 0); } }
+    lv1: { name: 'Mini set', get price() { return PRICES.lv1.price ?? 0; } },
+    lv2: { name: 'Set intero', get price() { return PRICES.lv2.price ?? 0; } },
+    lv3: { name: 'Set di gruppo', get price() { return Math.min(PRICES.lv3_2.price ?? 0, PRICES.lv3_3.price ?? 0); } }
   };
 
   const pad = (n) => String(n).padStart(2, '0');
