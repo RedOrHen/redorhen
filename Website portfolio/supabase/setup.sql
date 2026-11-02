@@ -249,10 +249,10 @@ insert into public.price_items (key, user_id, price, suffix)
 select v.key, u.id, v.price, v.suffix
 from (values
   ('lv1', 30, null),
-  ('lv2', 100, null),
+  ('lv2', 50, null),
   ('lv3_2', 60, null),
-  ('lv3_3', 80, null),
-  ('extra_foto', 5, '/ foto'),
+  ('lv3_3', 100, null),
+  ('extra_foto', 10, '/ foto'),
   ('extra_trasferta', 0, null),
   ('extra_evento', 30, '· 3 foto')
 ) as v (key, price, suffix)

@@ -1319,9 +1319,9 @@
   // prezzi di riserva, uguali a quelli scritti nel Listino, se Supabase non risponde
   const CHOICES = {
     lv1: { name: 'Mini set', key: 'lv1', plan: 'lv1', price: 30 },
-    lv2: { name: 'Set intero', key: 'lv2', plan: 'lv2', price: 100 },
+    lv2: { name: 'Set intero', key: 'lv2', plan: 'lv2', price: 50 },
     lv3_2: { name: 'Set di gruppo, 2 persone', key: 'lv3_2', plan: 'lv3', price: 60 },
-    lv3_3: { name: 'Set di gruppo, 3 persone', key: 'lv3_3', plan: 'lv3', price: 80 },
+    lv3_3: { name: 'Set di gruppo, 3 persone', key: 'lv3_3', plan: 'lv3', price: 100 },
     fiera: { name: 'Shooting in fiera', key: 'extra_evento', plan: null, price: 30, suffix: '· 3 foto', fair: true }
   };
   const euroTxt = (n) => `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')} €`;

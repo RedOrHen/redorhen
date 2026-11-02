@@ -30,7 +30,7 @@ Il concept visivo è "**Pixel → Fotogramma**": un sito cinematografico (titoli
 |---|---|---|
 | Home | `index.html` | Hero con foto in cornice da cinepresa, numeri, missione, tre pilastri (ognuno con una foto dai set), storia in tre capitoli, pellicola orizzontale con i set in evidenza, "quattro passi" dello shooting, invito finale, footer |
 | Lavori | `lavori.html` | Griglia dei set con filtri per categoria e per fiera (su telefono in righe che scorrono); clic su un set → visualizzatore a carosello |
-| Listino | `listino.html` | Tre pacchetti (Mini set 30 €, Set intero 100 €, Set di gruppo da 60 €), extra, tempi di consegna, domande frequenti |
+| Listino | `listino.html` | Tre pacchetti (Mini set 30 €, Set intero 50 €, Set di gruppo da 60 €), extra, tempi di consegna, domande frequenti |
 | Contatti | `contatti.html` | Modulo di richiesta shooting (inviato con Formspree), link a email e Instagram |
 | Area admin | `admin.html` | Login, calendario appuntamenti, editor dei set della galleria (vedi §5) |
 
