@@ -439,3 +439,17 @@ body.admin::after { display: none; }
 .g-bar i { display: block; height: 100%; background: var(--ember); transform-origin: left; transform: scaleX(0); transition: transform .2s linear; }
 #g-batch:empty { display: none; }
 .g-sort-hint:has(+ .g-photos:empty) { display: none; }
+
+/* Scheda Visite */
+.v-body { display: grid; gap: 16px; }
+.v-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.v-kpi { border: 1px solid var(--line, rgba(246, 231, 211, .2)); padding: 14px; display: grid; gap: 4px; }
+.v-kpi b { font-size: 1.9rem; line-height: 1; }
+.v-kpi span { font-size: .85rem; opacity: .75; }
+.v-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.v-card { border: 1px solid var(--line, rgba(246, 231, 211, .2)); padding: 14px; overflow-x: auto; }
+.v-h { font-size: 1rem; margin: 0 0 8px; }
+.v-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.v-table th, .v-table td { text-align: left; padding: 5px 4px; border-bottom: 1px solid rgba(246, 231, 211, .1); }
+.v-table th:last-child, .v-table td:last-child { text-align: right; width: 3rem; }
+.v-note { font-size: .85rem; }
