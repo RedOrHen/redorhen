@@ -57,9 +57,23 @@
         ${table('Azioni', count(events, (r) => r.label || r.kind), 'Azione')}
         ${table('Per giorno', count(views, (r) => r.created_at.slice(0, 10)).sort((a, b) => b[0].localeCompare(a[0])), 'Giorno')}
       </div>
-      <p class="muted v-note">Link da usare: <code>/ig</code> per la bio, <code>/storia</code> per le storie, <code>/post</code> per i post, tutti dopo l'indirizzo del sito.
-      Non si salvano IP né cookie. Le visite fatte in locale non contano.</p>`;
+      <p class="muted v-note">Non si salvano IP né cookie. Le visite fatte in locale non contano. Il conteggio parte dal giorno in cui il link in bio cambia.</p>`;
   }
+
+  // I link da usare: si vedono sempre, anche prima del login Supabase
+  const LINKS = [['ig', 'Link in bio'], ['storia', 'Sticker link nelle storie'], ['post', 'Link da citare nei post']];
+  function showLinks() {
+    const base = new URL('.', location.href).href;
+    $('#v-links').innerHTML = `<h2 class="v-h">I tuoi link da usare</h2><table class="v-table"><tbody>${
+      LINKS.map(([p, t]) => `<tr><td>${esc(t)}<br><code>${esc(base + p)}</code></td><td><button class="btn-sm" type="button" data-copy="${esc(base + p)}">Copia</button></td></tr>`).join('')}</tbody></table>`;
+  }
+  showLinks();
+  $('#v-links').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-copy]');
+    if (!b) return;
+    try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Copiato'; } catch (err) { b.textContent = 'Copia a mano'; }
+    setTimeout(() => { b.textContent = 'Copia'; }, 1500);
+  });
 
   window.addEventListener('ro-admin-ready', (e) => { sb = e.detail?.sb || null; loaded = false; });
   if (window.RO_ADMIN) sb = window.RO_ADMIN.sb;

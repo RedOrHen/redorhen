@@ -451,5 +451,6 @@ body.admin::after { display: none; }
 .v-h { font-size: 1rem; margin: 0 0 8px; }
 .v-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .v-table th, .v-table td { text-align: left; padding: 5px 4px; border-bottom: 1px solid rgba(246, 231, 211, .1); }
+.v-table td:last-child { white-space: nowrap; }
 .v-table th:last-child, .v-table td:last-child { text-align: right; width: 3rem; }
 .v-note { font-size: .85rem; }
